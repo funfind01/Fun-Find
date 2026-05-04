@@ -3,6 +3,7 @@
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
 import { useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function CartDrawer() {
   const { cart, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, totalPrice } = useCart();
@@ -18,18 +19,28 @@ export default function CartDrawer() {
     };
   }, [isCartOpen]);
 
-  if (!isCartOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[100] flex justify-end">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        onClick={() => setIsCartOpen(false)}
-      />
+    <AnimatePresence>
+      {isCartOpen && (
+        <div className="fixed inset-0 z-[100] flex justify-end">
+          {/* Backdrop */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsCartOpen(false)}
+          />
 
-      {/* Drawer */}
-      <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+          {/* Drawer */}
+          <motion.div 
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col"
+          >
         <div className="flex items-center justify-between p-6 border-b border-zinc-100">
           <h2 className="text-xl font-black uppercase tracking-tighter text-zinc-950">Your Cart</h2>
           <button 
@@ -115,7 +126,9 @@ export default function CartDrawer() {
             </Link>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
+      )}
+    </AnimatePresence>
   );
 }

@@ -1,12 +1,13 @@
 import React from "react";
 import Link from "next/link";
+import Logo from "./Logo";
 
 const Footer = () => {
   return (
     <footer className="bg-brand-black border-t border-white/5 py-20 px-6 lg:px-12 mt-auto">
       <div className="max-w-[1440px] mx-auto flex flex-col items-center text-center">
-        <div className="text-4xl font-black text-brand-white mb-8 tracking-tighter uppercase italic">
-          KINETIC
+        <div className="mb-8">
+          <Logo inverted className="text-[36px]" />
         </div>
         
         <div className="flex flex-wrap justify-center gap-x-12 gap-y-6 mb-16">

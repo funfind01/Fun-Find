@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import Logo from "@/components/Logo";
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -38,8 +39,8 @@ export default function AuthPage() {
           </div>
 
           <div className="relative z-10 p-8 md:p-16 h-full flex flex-col justify-between bg-gradient-to-t from-black/60 via-black/10 to-transparent">
-            <Link href="/" className="text-[48px] leading-none font-extrabold text-white italic tracking-tight">
-              KINETIC
+            <Link href="/" className="inline-block mb-4">
+              <Logo inverted className="text-[48px]" />
             </Link>
 
             <div className="hidden md:block">
@@ -99,9 +100,9 @@ export default function AuthPage() {
         </section>
       </div>
 
-      <div className="fixed top-6 left-6 z-50 md:hidden">
-        <Link href="/" className="text-[24px] leading-tight font-bold text-black italic tracking-tight mix-blend-difference">
-          KINETIC
+      <div className="fixed top-6 left-6 z-50 md:hidden mix-blend-difference">
+        <Link href="/" className="inline-block">
+          <Logo inverted className="text-[24px]" />
         </Link>
       </div>
     </main>

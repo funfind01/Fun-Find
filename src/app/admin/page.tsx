@@ -87,7 +87,8 @@ export default function AdminDashboard() {
   const [setupRequired, setSetupRequired] = useState(false);
 
   const metrics = useMemo(() => {
-    const revenue = products.reduce((sum, product) => sum + product.price * product.stock, 0);
+    // Using mock sales revenue based on recent orders (₹320.00 + ₹1,240.50 + ₹89.00)
+    const revenue = 1649.50;
     const activeStock = products.reduce((sum, product) => sum + product.stock, 0);
     const lowStock = products.filter((product) => product.stock <= 10).length;
 
@@ -523,8 +524,8 @@ function DashboardView({ metrics, products, onReload }: { metrics: { revenue: nu
             <span className="material-symbols-outlined text-emerald-500 text-xl">trending_up</span>
           </div>
           <div className="mt-4">
-            <p className="text-3xl font-black tracking-tight">${metrics.revenue.toLocaleString()}</p>
-            <p className="text-xs text-emerald-600 font-bold mt-1">Inventory value</p>
+            <p className="text-3xl font-black tracking-tight">₹{metrics.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <p className="text-xs text-emerald-600 font-bold mt-1">Sales Revenue</p>
           </div>
         </div>
         <div className="bg-zinc-50 border border-zinc-100 p-6 rounded-xl flex flex-col justify-between hover:shadow-lg transition-shadow">
