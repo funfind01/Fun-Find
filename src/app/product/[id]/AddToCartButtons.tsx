@@ -64,11 +64,11 @@ export default function AddToCartButtons({ product }: { product: Product }) {
       <div className="flex justify-between items-center px-2 text-sm text-[#46464a]">
         <div className="flex items-center gap-1">
           <span className="material-symbols-outlined text-sm">local_shipping</span>
-          SHIPS IN 24 HOURS
+          SHIPS IN 7 DAYS
         </div>
         <div className="flex items-center gap-1">
-          <span className="material-symbols-outlined text-sm">verified_user</span>
-          LIFETIME WARRANTY
+          <span className="material-symbols-outlined text-sm">verified</span>
+          VERIFIED
         </div>
       </div>
     </div>

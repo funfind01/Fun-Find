@@ -11,6 +11,7 @@ type ProductForm = {
   price: string;
   stock: string;
   image_url: string;
+  images: string[];
   description: string;
   material: string;
   finish: string;
@@ -30,6 +31,7 @@ const emptyForm: ProductForm = {
   price: "",
   stock: "",
   image_url: "",
+  images: [],
   description: "",
   material: "",
   finish: "",
@@ -163,6 +165,7 @@ export default function AdminDashboard() {
       price: String(product.price),
       stock: String(product.stock),
       image_url: product.image_url,
+      images: Array.isArray(product.metadata?.images) ? (product.metadata.images as string[]) : [],
       description: product.description,
       material: String(product.metadata?.material ?? ""),
       finish: String(product.metadata?.finish ?? ""),
@@ -220,6 +223,7 @@ export default function AdminDashboard() {
         material: form.material,
         finish: form.finish,
         badge: form.badge,
+        images: (form.images || []).filter(Boolean),
       },
     };
 
@@ -895,7 +899,9 @@ function ProductEditor({
           {/* Right: image panel */}
           <ImageUploadPanel
             value={form.image_url}
+            images={form.images}
             onChange={(url) => onChange("image_url", url)}
+            onImagesChange={(imgs) => onChange("images", imgs as any)}
             material={form.material}
             finish={form.finish}
             badge={form.badge}
@@ -930,32 +936,48 @@ function ProductEditor({
 
 function ImageUploadPanel({
   value,
+  images = [],
   onChange,
+  onImagesChange,
   material,
   finish,
   badge,
 }: {
   value: string;
+  images?: string[];
   onChange: (url: string) => void;
+  onImagesChange?: (urls: string[]) => void;
   material: string;
   finish: string;
   badge: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const extraInputRef0 = useRef<HTMLInputElement>(null);
+  const extraInputRef1 = useRef<HTMLInputElement>(null);
+  const extraInputRef2 = useRef<HTMLInputElement>(null);
+  const extraInputRefs = [extraInputRef0, extraInputRef1, extraInputRef2];
+  
   const [uploading, setUploading] = useState(false);
+  const [uploadingExtra, setUploadingExtra] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
 
-  const upload = async (file: File) => {
-    setUploading(true);
-    setUploadError("");
+  const uploadFile = async (file: File) => {
     const fd = new FormData();
     fd.append("file", file);
+    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+    const data = (await res.json()) as { url?: string; error?: string };
+    if (!res.ok || !data.url) throw new Error(data.error ?? "Upload failed");
+    return data.url;
+  };
+
+  const handleFile = async (file: File | undefined) => {
+    if (!file) return;
+    setUploading(true);
+    setUploadError("");
     try {
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (!res.ok || !data.url) throw new Error(data.error ?? "Upload failed");
-      onChange(data.url);
+      const url = await uploadFile(file);
+      onChange(url);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed");
     } finally {
@@ -963,9 +985,20 @@ function ImageUploadPanel({
     }
   };
 
-  const handleFile = (file: File | undefined) => {
+  const handleExtraFile = async (file: File | undefined, index: number) => {
     if (!file) return;
-    void upload(file);
+    setUploadingExtra(index);
+    setUploadError("");
+    try {
+      const url = await uploadFile(file);
+      const newImages = [...images];
+      newImages[index] = url;
+      onImagesChange?.(newImages);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingExtra(null);
+    }
   };
 
   return (
@@ -1038,6 +1071,49 @@ function ImageUploadPanel({
         {uploadError && (
           <p className="mt-2 text-xs font-bold text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{uploadError}</p>
         )}
+      </div>
+
+      {/* Extra Images */}
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2 mt-2">Side Views (Optional)</p>
+        <div className="grid grid-cols-3 gap-3">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="aspect-square relative rounded-lg border-2 border-dashed border-zinc-300 bg-white hover:border-zinc-400 hover:bg-zinc-50 cursor-pointer flex flex-col items-center justify-center overflow-hidden"
+              onClick={() => extraInputRefs[i].current?.click()}
+            >
+              <input
+                ref={extraInputRefs[i]}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleExtraFile(e.target.files?.[0], i)}
+              />
+              {images[i] && uploadingExtra !== i ? (
+                <img src={images[i]} className="w-full h-full object-cover" alt="side view" />
+              ) : uploadingExtra === i ? (
+                <span className="material-symbols-outlined animate-spin text-zinc-400">progress_activity</span>
+              ) : (
+                <span className="material-symbols-outlined text-zinc-300">add_photo_alternate</span>
+              )}
+              {images[i] && uploadingExtra !== i && (
+                <button
+                  type="button"
+                  className="absolute top-1 right-1 bg-white/80 p-0.5 rounded-full hover:bg-white text-zinc-600 shadow-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const newImages = [...images];
+                    newImages[i] = "";
+                    onImagesChange?.(newImages);
+                  }}
+                >
+                  <span className="material-symbols-outlined text-xs block">close</span>
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Manual URL fallback */}

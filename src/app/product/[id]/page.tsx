@@ -88,15 +88,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 {product.description ||
                   "Engineered from a solid block of Grade 5 Titanium, this isn't just a key fob—it's a kinetic sculpture for your pocket. Designed for those who appreciate mechanical perfection and a high fidget factor."}
               </p>
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[#006e1e]">precision_manufacturing</span>
-                  <span className="text-sm font-bold">AEROSPACE GRADE 5 TITANIUM</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[#006e1e]">toys</span>
-                  <span className="text-sm font-bold">CERAMIC BALL-BEARING SPINNER</span>
-                </div>
+              <div className="flex flex-wrap gap-2">
+                {specs.slice(0, 4).map(([k, v]) => (
+                  <span key={k} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f3f3f4] text-[#1a1c1d] text-[10px] font-bold uppercase tracking-widest border border-[#e2e2e3]">
+                    <span className="text-[#46464a]">{k}:</span> {v}
+                  </span>
+                ))}
               </div>
             </div>
 
