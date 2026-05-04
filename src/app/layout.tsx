@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   description: "High-performance EDC and artifacts for the modern collector.",
 };
 
+import { AuthProvider } from "@/context/AuthContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,14 +32,16 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-brand-black text-brand-white selection:bg-brand-neon selection:text-brand-black">
-        <CartProvider>
-          <SmoothScroll>
-            <PageWrapper>
-              {children}
-              <CartDrawer />
-            </PageWrapper>
-          </SmoothScroll>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <SmoothScroll>
+              <PageWrapper>
+                {children}
+                <CartDrawer />
+              </PageWrapper>
+            </SmoothScroll>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

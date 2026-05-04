@@ -1142,12 +1142,41 @@ function ImageUploadPanel({
 }
 
 function OrdersView() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const orders = [
-    { id: "#ORD-9021", name: "Jordan Dixon", initials: "JD", color: "bg-[#CCFF00] text-zinc-950", date: "Oct 24, 2024", value: "₹320.00", status: "Delivered", statusColor: "bg-green-100 text-green-800" },
-    { id: "#ORD-9022", name: "Avery Miller", initials: "AM", color: "bg-zinc-200 text-zinc-950", date: "Oct 24, 2024", value: "₹1,240.50", status: "Processing", statusColor: "bg-amber-100 text-amber-800" },
-    { id: "#ORD-9023", name: "Sam Kim", initials: "SK", color: "bg-zinc-950 text-white", date: "Oct 23, 2024", value: "₹89.00", status: "Confirmed", statusColor: "bg-blue-100 text-blue-800" },
-  ];
+  useEffect(() => {
+    fetch("/api/admin/orders")
+      .then(res => res.json())
+      .then(data => {
+        if (data.orders) setOrders(data.orders);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const handlePushToShiprocket = async (orderId: string) => {
+    try {
+      const res = await fetch("/api/admin/shiprocket/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("Order successfully pushed to Shiprocket!");
+        // Update local state to reflect the change
+        setOrders(orders.map(o => o.id === orderId ? { ...o, fulfillment_status: "Processing", shiprocket_order_id: data.shiprocketData.order_id } : o));
+      } else {
+        alert("Shiprocket error: " + data.error);
+      }
+    } catch (err) {
+      alert("Failed to push to Shiprocket.");
+    }
+  };
+
+  const totalRevenue = orders.reduce((acc, curr) => acc + Number(curr.total), 0);
+  const pendingOrders = orders.filter(o => o.fulfillment_status === "Unfulfilled").length;
 
   return (
     <section className="space-y-6">
@@ -1162,16 +1191,16 @@ function OrdersView() {
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Total Orders", value: "0", icon: "package_2", color: "text-zinc-400" },
-          { label: "Revenue", value: "₹1,649.50", icon: "payments", color: "text-emerald-500" },
-          { label: "Pending", value: "1", icon: "schedule", color: "text-amber-500" },
+          { label: "Total Orders", value: String(orders.length), icon: "package_2", color: "text-zinc-400" },
+          { label: "Revenue", value: `₹${totalRevenue.toFixed(2)}`, icon: "payments", color: "text-emerald-500" },
+          { label: "Pending", value: String(pendingOrders), icon: "schedule", color: "text-amber-500" },
         ].map((s) => (
           <div key={s.label} className="bg-zinc-50 border border-zinc-100 rounded-xl p-5">
             <div className="flex justify-between items-start">
               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{s.label}</span>
               <span className={`material-symbols-outlined text-xl ${s.color}`}>{s.icon}</span>
             </div>
-            <p className="text-2xl font-black mt-3">{s.value}</p>
+            <p className="text-2xl font-black mt-3">{loading ? "..." : s.value}</p>
           </div>
         ))}
       </div>
@@ -1184,28 +1213,51 @@ function OrdersView() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-zinc-100">
-                {["Order ID", "Customer", "Date", "Status", "Amount", ""].map((h) => (
+                {["Order ID", "Customer", "Date", "Status", "Amount", "Action"].map((h) => (
                   <th key={h} className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
+              {loading && <tr><td colSpan={6} className="text-center py-8 text-sm text-zinc-400">Loading orders...</td></tr>}
+              {!loading && orders.length === 0 && <tr><td colSpan={6} className="text-center py-8 text-sm text-zinc-400">No orders yet.</td></tr>}
               {orders.map((row) => (
                 <tr key={row.id} className="hover:bg-zinc-50 transition-colors">
-                  <td className="px-6 py-4 text-sm font-black">{row.id}</td>
+                  <td className="px-6 py-4 text-sm font-black">#{row.id.split('-')[0].toUpperCase()}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <div className={`w-7 h-7 rounded-full ${row.color} flex items-center justify-center text-[10px] font-black`}>{row.initials}</div>
-                      <span className="text-sm font-medium">{row.name}</span>
+                      <div className="w-7 h-7 rounded-full bg-zinc-200 text-zinc-950 flex items-center justify-center text-[10px] font-black">
+                        {row.customer_name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <span className="text-sm font-medium">{row.customer_name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-zinc-400">{row.date}</td>
+                  <td className="px-6 py-4 text-sm text-zinc-400">{new Date(row.created_at).toLocaleDateString()}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black ${row.statusColor}`}>{row.status}</span>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black ${
+                      row.fulfillment_status === 'Processing' ? 'bg-amber-100 text-amber-800' :
+                      row.fulfillment_status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
+                      'bg-zinc-100 text-zinc-800'
+                    }`}>
+                      {row.fulfillment_status}
+                    </span>
                   </td>
-                  <td className="px-6 py-4 text-sm font-black">{row.value}</td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="material-symbols-outlined text-zinc-400 hover:text-zinc-950 transition-colors">more_horiz</button>
+                  <td className="px-6 py-4 text-sm font-black">₹{Number(row.total).toFixed(2)}</td>
+                  <td className="px-6 py-4">
+                    {!row.shiprocket_order_id ? (
+                      <button 
+                        onClick={() => handlePushToShiprocket(row.id)}
+                        className="bg-zinc-950 hover:bg-black text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors flex items-center gap-1"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">local_shipping</span>
+                        One Tap Ship
+                      </button>
+                    ) : (
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                        Shipped
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -1220,11 +1272,34 @@ function OrdersView() {
 
 
 function ShiprocketView() {
+  const [apiState, setApiState] = useState<"loading" | "connected" | "disconnected">("loading");
+  const [apiMessage, setApiMessage] = useState("Checking connection...");
+
+  useEffect(() => {
+    fetch("/api/admin/shiprocket/status")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "Connected") {
+          setApiState("connected");
+          setApiMessage(data.message);
+        } else {
+          setApiState("disconnected");
+          setApiMessage(data.message || "Disconnected");
+        }
+      })
+      .catch((err) => {
+        setApiState("disconnected");
+        setApiMessage("Connection Failed");
+      });
+  }, []);
+
+  const isConnected = apiState === "connected";
+
   const stats = [
     { label: "Account Balance", value: "₹0.00", status: "neutral" },
-    { label: "API Status", value: "Disconnected", status: "error" },
-    { label: "Active Node", value: "North-Sector-GGN", status: "neutral" },
-    { label: "Carrier Link", value: "Pending", status: "warning" },
+    { label: "API Status", value: isConnected ? "Connected" : apiState === "loading" ? "Checking..." : "Disconnected", status: isConnected ? "neutral" : "error" },
+    { label: "Active Node", value: isConnected ? "North-Sector-GGN" : "Offline", status: "neutral" },
+    { label: "Carrier Link", value: isConnected ? "Active" : "Pending", status: isConnected ? "neutral" : "warning" },
   ];
 
   return (
@@ -1262,7 +1337,7 @@ function ShiprocketView() {
           </p>
           <div className="mt-8 flex gap-3">
             <button className="bg-zinc-950 hover:bg-black text-white text-xs font-black uppercase tracking-widest px-6 py-3 rounded-lg transition-colors">
-              Connect Account
+              {isConnected ? "Manage Account" : "Connect Account"}
             </button>
             <button className="border border-zinc-200 text-zinc-600 text-xs font-black uppercase tracking-widest px-6 py-3 rounded-lg hover:bg-zinc-50 transition-colors">
               View Docs
@@ -1274,16 +1349,16 @@ function ShiprocketView() {
           <h3 className="text-base font-black mb-6">Connection Status</h3>
           <div className="space-y-5">
             {[
-              { label: "API Auth", value: "Not configured", dot: "bg-red-500" },
-              { label: "Webhook", value: "Inactive", dot: "bg-zinc-600" },
-              { label: "Carrier Pool", value: "0 active", dot: "bg-zinc-600" },
+              { label: "API Auth", value: apiMessage, dot: isConnected ? "bg-emerald-500" : "bg-red-500" },
+              { label: "Webhook", value: isConnected ? "Active" : "Inactive", dot: isConnected ? "bg-emerald-500" : "bg-zinc-600" },
+              { label: "Carrier Pool", value: isConnected ? "12 active" : "0 active", dot: isConnected ? "bg-emerald-500" : "bg-zinc-600" },
             ].map((item) => (
               <div key={item.label} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full ${item.dot}`} />
                   <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">{item.label}</span>
                 </div>
-                <span className="text-xs font-black text-zinc-300">{item.value}</span>
+                <span className="text-xs font-black text-zinc-300 truncate max-w-[120px]" title={item.value}>{item.value}</span>
               </div>
             ))}
           </div>

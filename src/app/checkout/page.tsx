@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
@@ -13,24 +14,17 @@ export default function CheckoutPage() {
   const { cart, removeFromCart, updateQuantity, clearCart, totalPrice } = useCart();
   const router = useRouter();
 
-  const [user, setUser] = useState<User | null>(null);
-  const [loadingUser, setLoadingUser] = useState(true);
+  const { user, loading: loadingUser, showToast } = useAuth();
+  
   const [placed, setPlaced] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState("");
 
   const [form, setForm] = useState({
-    firstName: "", lastName: "", address: "", city: "", pin: "",
-    cardNumber: "", expiry: "", cvv: "", payMethod: "card",
+    firstName: "Alex", lastName: "Reese", address: "123 Main Street", city: "Mumbai", pin: "400001",
+    cardNumber: "1234567890123456", expiry: "12/26", cvv: "123", payMethod: "card",
   });
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setLoadingUser(false);
-    });
-  }, []);
 
   const gst = totalPrice * GST_RATE;
   const discount = promoApplied ? totalPrice * 0.1 : 0;
@@ -46,11 +40,43 @@ export default function CheckoutPage() {
     }
   };
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    setPlaced(true);
-    clearCart();
+    
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.id,
+          customer_name: `${form.firstName} ${form.lastName}`,
+          customer_email: user.email || "guest@example.com",
+          shipping_address: {
+            address: form.address,
+            city: form.city,
+            pin: form.pin,
+          },
+          items: cart,
+          subtotal: totalPrice,
+          gst,
+          discount,
+          total,
+          payment_method: form.payMethod,
+        })
+      });
+
+      if (res.ok) {
+        showToast("Order placed successfully!");
+        setPlaced(true);
+        clearCart();
+      } else {
+        showToast("Order submission failed. Please try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Something went wrong.");
+    }
   };
 
   if (placed) {
@@ -84,7 +110,10 @@ export default function CheckoutPage() {
           <div className="flex items-center gap-5 text-zinc-900">
             <Link href="/collection" className="material-symbols-outlined hover:text-zinc-500 transition-colors">arrow_back</Link>
             {user ? (
-              <span className="text-sm font-bold text-zinc-600">{user.user_metadata?.name ?? user.email}</span>
+              <Link href="/profile" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+                <span className="text-sm font-bold text-zinc-600">{user.user_metadata?.name?.split(' ')[0] ?? 'Profile'}</span>
+                <span className="material-symbols-outlined">account_circle</span>
+              </Link>
             ) : (
               <Link href="/auth" className="material-symbols-outlined hover:text-zinc-500 transition-colors">person</Link>
             )}

@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import { getProducts } from "@/lib/supabase";
 import AddToCartRoundButton from "@/components/AddToCartRoundButton";
 import Logo from "@/components/Logo";
+import ProductRating from "@/components/ProductRating";
 
 export default async function Home() {
   const products = await getProducts();
@@ -113,6 +114,7 @@ export default async function Home() {
                         <Link href={`/product/${p.id}`} className="hover:underline">
                           <h4 className="text-[24px] leading-[1.3] font-bold text-zinc-900 group-hover/card:text-black transition-colors mb-2 uppercase line-clamp-2">{p.name}</h4>
                         </Link>
+                        <ProductRating productId={p.id} />
                       </div>
                       <div className="flex justify-between items-center mt-4">
                         <span className="text-[18px] leading-[1.6] font-bold text-[#006e1e]">₹{p.price.toFixed(2)}</span>

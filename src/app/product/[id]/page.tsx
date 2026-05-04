@@ -5,6 +5,7 @@ import AddToCartButtons from "./AddToCartButtons";
 import Navbar from "@/components/Navbar";
 import ProductGallery from "./ProductGallery";
 import Logo from "@/components/Logo";
+import ProductRating from "@/components/ProductRating";
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -70,15 +71,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
             <h1 className="text-[42px] leading-[1.1] font-extrabold text-black mb-2">{product.name}</h1>
 
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex text-[#006e1e]">
-                <span className="material-symbols-outlined">star</span>
-                <span className="material-symbols-outlined">star</span>
-                <span className="material-symbols-outlined">star</span>
-                <span className="material-symbols-outlined">star</span>
-                <span className="material-symbols-outlined">star_half</span>
-              </div>
-              <span className="text-sm text-[#46464a]">(128 REVIEWS)</span>
+            <div className="mb-6">
+              <ProductRating productId={product.id} />
             </div>
 
             <div className="text-[36px] font-bold text-black mb-6">₹{product.price.toFixed(2)}</div>

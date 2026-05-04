@@ -3,6 +3,7 @@ import { getProducts } from "@/lib/supabase";
 import QuickAddButton from "./QuickAddButton";
 import Navbar from "@/components/Navbar";
 import Logo from "@/components/Logo";
+import ProductRating from "@/components/ProductRating";
 
 export default async function CollectionPage({ searchParams }: { searchParams: Promise<{ category?: string, q?: string, sort?: string, instock?: string }> }) {
   const params = await searchParams;
@@ -150,8 +151,9 @@ export default async function CollectionPage({ searchParams }: { searchParams: P
                 </div>
                 <div className="flex flex-col gap-1 p-6 bg-white">
                   <h3 className="text-xl md:text-2xl leading-[1.2] tracking-[-0.02em] font-bold text-zinc-900 group-hover:text-black transition-colors truncate">{product.name}</h3>
-                  <p className="text-[12px] text-zinc-500 uppercase tracking-widest">{product.category} / Niche</p>
-                  <p className="mt-3 text-2xl leading-[1.2] font-bold text-[#006e1e]">₹{product.price.toFixed(2)}</p>
+                  <p className="text-[12px] text-zinc-500 uppercase tracking-widest mb-1">{product.category} / Niche</p>
+                  <ProductRating productId={product.id} />
+                  <p className="mt-2 text-2xl leading-[1.2] font-bold text-[#006e1e]">₹{product.price.toFixed(2)}</p>
                 </div>
               </Link>
             ))}
