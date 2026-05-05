@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
 import { getShiprocketToken } from "@/lib/shiprocket";
-import { cookies } from "next/headers";
+import { adminUnauthorizedResponse, hasValidAdminSession } from "@/utils/admin-auth";
 
 export async function GET() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("admin_token")?.value;
-  if (!token || token !== process.env.ADMIN_PANEL_SESSION_TOKEN) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await hasValidAdminSession())) {
+    return adminUnauthorizedResponse();
   }
 
   try {

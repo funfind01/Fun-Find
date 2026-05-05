@@ -19,6 +19,17 @@ export interface Product {
 
 const demoProducts: Product[] = [
   {
+    id: "demo-test",
+    name: "0 Rs Checkout Tester",
+    price: 0,
+    description: "A free test product specifically designed to evaluate the checkout, payment, and shiprocket systems without incurring costs.",
+    category: "Drops",
+    image_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCW9AQFxIPyy49vxLdTz2x9iQdF3VHsBEztrKTPaI3ByyjkRSpyRl_dyEI0ojZjk9au2Jl6IAYBU2SyUn58TTY7VjAlr-sf2LSXoAUTvwAx4MhAYsdGwIZJJ8oy1Q194hhDp7DeR8fSkWp9wuOON-CN-OmH_A3ctpMLw2FFNysksqni8CV3CGRxWPuv8EkW5GJacNxLdVSoPt7xH4YIXgfruxf5FsduZD7nlb0LizYyvP7qo12TCZIEZOT2hZH6Xb4xpp-iegdlW0E5",
+    metadata: { material: "Virtual Data" },
+    stock: 999,
+    created_at: new Date().toISOString(),
+  },
+  {
     id: "demo-1",
     name: "Vector-01 Titanium",
     price: 185,
@@ -78,6 +89,12 @@ export const getProducts = async (): Promise<Product[]> => {
 
   if (!data || data.length === 0) {
     return demoProducts;
+  }
+
+  // Prepend the test product to ensure it's always available for checkout testing
+  const testProduct = demoProducts.find(p => p.id === "demo-test");
+  if (testProduct && !data.some(p => p.id === "demo-test")) {
+    return [testProduct, ...data] as Product[];
   }
 
   return data as Product[];

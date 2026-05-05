@@ -31,7 +31,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full flex flex-col bg-brand-black text-brand-white selection:bg-brand-neon selection:text-brand-black">
+      <body className="min-h-full flex flex-col bg-[#f9f9fa] text-zinc-950 selection:bg-[#29fe57] selection:text-[#00711f]">
         <AuthProvider>
           <CartProvider>
             <SmoothScroll>

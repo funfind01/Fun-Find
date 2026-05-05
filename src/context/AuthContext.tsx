@@ -39,10 +39,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       setLoading(false);
       
-      if (_event === 'SIGNED_IN') {
-        showToast("Signed in successfully");
-      } else if (_event === 'SIGNED_OUT') {
-        showToast("Signed out");
+      if (_event === 'SIGNED_OUT') {
+        showToast("Signed out successfully");
       }
     });
 
