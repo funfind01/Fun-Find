@@ -158,7 +158,7 @@ export default function ProfilePage() {
     <main className="min-h-screen bg-[#f9f9fa] text-zinc-950 pb-20">
       {/* Top Nav */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200">
-        <div className="flex justify-between items-center h-20 px-6 lg:px-12 max-w-[1440px] mx-auto">
+        <div className="flex justify-between items-center h-20 px-6 max-w-5xl mx-auto">
           <Link href="/"><Logo className="text-[24px]" /></Link>
           <div className="flex items-center gap-6">
             <Link href="/collection" className="text-sm font-bold tracking-tight text-zinc-500 hover:text-zinc-900 transition-colors hidden sm:block">Shop</Link>
