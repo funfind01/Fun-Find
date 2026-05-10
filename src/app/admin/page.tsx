@@ -146,7 +146,7 @@ export default function AdminDashboard() {
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  const updateForm = (key: keyof ProductForm, value: string) => {
+  const updateForm = <K extends keyof ProductForm>(key: K, value: ProductForm[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
   };
 
@@ -817,7 +817,7 @@ function ProductEditor({
 }: {
   form: ProductForm;
   isSaving: boolean;
-  onChange: (key: keyof ProductForm, value: string) => void;
+  onChange: <K extends keyof ProductForm>(key: K, value: ProductForm[K]) => void;
   onClose: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
@@ -901,7 +901,7 @@ function ProductEditor({
             value={form.image_url}
             images={form.images}
             onChange={(url) => onChange("image_url", url)}
-            onImagesChange={(imgs) => onChange("images", imgs as any)}
+            onImagesChange={(imgs) => onChange("images", imgs)}
             material={form.material}
             finish={form.finish}
             badge={form.badge}
@@ -1142,7 +1142,16 @@ function ImageUploadPanel({
 }
 
 function OrdersView() {
-  const [orders, setOrders] = useState<any[]>([]);
+  type AdminOrderRow = {
+    id: string;
+    customer_name: string;
+    created_at: string;
+    fulfillment_status: string | null;
+    total: number | string;
+    shiprocket_order_id: string | null;
+  };
+
+  const [orders, setOrders] = useState<AdminOrderRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

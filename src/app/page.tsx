@@ -145,7 +145,7 @@ export default async function Home() {
 
           <section className="bg-black text-white py-24">
             <div className="max-w-4xl mx-auto px-6 text-center">
-              <h2 className="text-[48px] leading-[1.1] tracking-[-0.04em] font-extrabold mb-6">DON'T MISS THE NEXT DROP.</h2>
+              <h2 className="text-[48px] leading-[1.1] tracking-[-0.04em] font-extrabold mb-6">DON&apos;T MISS THE NEXT DROP.</h2>
               <p className="text-[18px] leading-[1.6] mb-10 opacity-80">Be the first to know about limited releases and engineered drops. We only email when it matters.</p>
               <form className="flex flex-col md:flex-row gap-4 max-w-xl mx-auto">
                 <input className="flex-1 bg-white/10 border border-white/20 text-white placeholder:text-white/40 px-6 py-4 focus:ring-2 focus:ring-[#29fe57] focus:border-transparent outline-none uppercase text-[14px] leading-[1.2] tracking-[0.05em] font-bold backdrop-blur-md" placeholder="ENTER YOUR EMAIL" type="email"/>

@@ -1,5 +1,9 @@
 const SHIPROCKET_URL = "https://apiv2.shiprocket.in/v1/external";
 
+type ShiprocketAuthResponse = {
+  token?: string;
+};
+
 export const getShiprocketToken = async () => {
   const response = await fetch(`${SHIPROCKET_URL}/auth/login`, {
     method: "POST",
@@ -10,11 +14,11 @@ export const getShiprocketToken = async () => {
     }),
   });
 
-  const data = await response.json();
+  const data = (await response.json()) as ShiprocketAuthResponse;
   return data.token;
 };
 
-export const createShiprocketOrder = async (orderData: any) => {
+export const createShiprocketOrder = async (orderData: Record<string, unknown>) => {
   const token = await getShiprocketToken();
   const response = await fetch(`${SHIPROCKET_URL}/orders/create/adhoc`, {
     method: "POST",

@@ -15,12 +15,22 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     notFound();
   }
 
+  const hashString = (input: string) => {
+    let hash = 0;
+    for (let i = 0; i < input.length; i++) {
+      hash = (hash * 31 + input.charCodeAt(i)) >>> 0;
+    }
+    return hash;
+  };
+
   // Get other products for "Customers Also Bought"
   const allProducts = await getProducts();
   const relatedProducts = allProducts
     .filter((p) => p.id !== product.id)
-    .sort(() => 0.5 - Math.random()) // Randomize
-    .slice(0, 4);
+    .map((p) => ({ product: p, sortKey: hashString(`${product.id}:${p.id}`) }))
+    .sort((a, b) => a.sortKey - b.sortKey)
+    .slice(0, 4)
+    .map(({ product: p }) => p);
 
   const fallbackSpecs: Array<[string, string]> = [
     ["MATERIAL", "CNC Machined Grade 5 Titanium"],

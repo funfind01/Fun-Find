@@ -12,7 +12,7 @@ export default async function CollectionPage({ searchParams }: { searchParams: P
   const currentSort = params.sort || "featured";
   const inStockOnly = params.instock === "true";
 
-  let allProducts = await getProducts();
+  const allProducts = await getProducts();
   
   const availableCategories = Array.from(new Set(allProducts.map(p => p.category)));
   const navCategories = ["All", ...availableCategories];

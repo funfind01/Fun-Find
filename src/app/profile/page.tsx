@@ -7,15 +7,88 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 
+function ProfileDetailsForm({
+  initialName,
+  initialMobile,
+  onUpdated,
+  onError,
+}: {
+  initialName: string;
+  initialMobile: string;
+  onUpdated: () => void;
+  onError: () => void;
+}) {
+  const [name, setName] = useState(initialName);
+  const [mobile, setMobile] = useState(initialMobile);
+  const [saving, setSaving] = useState(false);
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { name, mobile },
+      });
+
+      if (error) {
+        onError();
+        return;
+      }
+
+      onUpdated();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-sm space-y-6">
+      <h2 className="text-sm font-black uppercase tracking-widest text-zinc-400">Profile Details</h2>
+      <form onSubmit={handleUpdateProfile} className="space-y-4">
+        <div>
+          <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1.5">Full Name</label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full bg-zinc-50 border-b-2 border-zinc-200 focus:border-zinc-950 outline-none p-2.5 text-sm transition-colors"
+            placeholder="Your Name"
+          />
+        </div>
+        <div>
+          <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1.5">Mobile Number</label>
+          <input
+            value={mobile}
+            onChange={(e) => setMobile(e.target.value)}
+            className="w-full bg-zinc-50 border-b-2 border-zinc-200 focus:border-zinc-950 outline-none p-2.5 text-sm transition-colors"
+            placeholder="+91 0000000000"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={saving}
+          className="w-full bg-zinc-950 text-white py-3 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-black transition-colors mt-2 disabled:opacity-60"
+        >
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const { user, loading: authLoading, showToast } = useAuth();
   const router = useRouter();
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loadingOrders, setLoadingOrders] = useState(true);
+  type OrderRow = {
+    id: string;
+    created_at: string;
+    total: number | string;
+    fulfillment_status: string | null;
+    items: unknown[];
+    shiprocket_awb?: string | null;
+  };
 
-  // Profile Form State
-  const [name, setName] = useState("");
-  const [mobile, setMobile] = useState("");
+  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
   
   useEffect(() => {
     if (!authLoading && !user) {
@@ -25,9 +98,6 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user) {
-      setName(user.user_metadata?.name || "");
-      setMobile(user.user_metadata?.mobile || "");
-
       // Fetch user's orders
       const fetchOrders = async () => {
         const { data, error } = await supabase
@@ -46,21 +116,6 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    
-    const { error } = await supabase.auth.updateUser({
-      data: { name, mobile }
-    });
-
-    if (error) {
-      showToast("Failed to update profile");
-    } else {
-      showToast("Profile updated successfully");
-    }
-  };
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push("/");
@@ -70,6 +125,9 @@ export default function ProfilePage() {
     return <div className="min-h-screen bg-zinc-50 flex items-center justify-center text-sm font-bold text-zinc-400">Loading profile...</div>;
   }
 
+  const initialName = String(user.user_metadata?.name ?? "");
+  const initialMobile = String(user.user_metadata?.mobile ?? "");
+
   return (
     <main className="min-h-screen bg-[#f9f9fa] text-zinc-950 pb-20">
       {/* Top Nav */}
@@ -78,6 +136,10 @@ export default function ProfilePage() {
           <Link href="/"><Logo className="text-[24px]" /></Link>
           <div className="flex items-center gap-6">
             <Link href="/collection" className="text-sm font-bold tracking-tight text-zinc-500 hover:text-zinc-900 transition-colors hidden sm:block">Shop</Link>
+            <Link href="/checkout" className="relative flex items-center gap-1.5 text-sm font-bold tracking-tight text-zinc-500 hover:text-zinc-900 transition-colors hidden sm:block">
+              <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
+              Cart
+            </Link>
             <button onClick={handleSignOut} className="text-sm font-bold tracking-tight text-red-500 hover:text-red-600 transition-colors">Sign Out</button>
           </div>
         </div>
@@ -88,28 +150,19 @@ export default function ProfilePage() {
         <div className="md:col-span-4 space-y-8">
           <div className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-sm">
             <div className="w-16 h-16 bg-[#CCFF00] rounded-full flex items-center justify-center text-2xl font-black mb-4">
-              {name ? name.substring(0, 1).toUpperCase() : user.email?.substring(0, 1).toUpperCase()}
+              {initialName ? initialName.substring(0, 1).toUpperCase() : user.email?.substring(0, 1).toUpperCase()}
             </div>
-            <h1 className="text-2xl font-black tracking-tight">{name || "Collector"}</h1>
+            <h1 className="text-2xl font-black tracking-tight">{initialName || "Collector"}</h1>
             <p className="text-sm text-zinc-500 font-medium">{user.email}</p>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-sm space-y-6">
-            <h2 className="text-sm font-black uppercase tracking-widest text-zinc-400">Profile Details</h2>
-            <form onSubmit={handleUpdateProfile} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1.5">Full Name</label>
-                <input value={name} onChange={e => setName(e.target.value)} className="w-full bg-zinc-50 border-b-2 border-zinc-200 focus:border-zinc-950 outline-none p-2.5 text-sm transition-colors" placeholder="Your Name" />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1.5">Mobile Number</label>
-                <input value={mobile} onChange={e => setMobile(e.target.value)} className="w-full bg-zinc-50 border-b-2 border-zinc-200 focus:border-zinc-950 outline-none p-2.5 text-sm transition-colors" placeholder="+91 0000000000" />
-              </div>
-              <button type="submit" className="w-full bg-zinc-950 text-white py-3 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-black transition-colors mt-2">
-                Save Changes
-              </button>
-            </form>
-          </div>
+          <ProfileDetailsForm
+            key={user.id}
+            initialName={initialName}
+            initialMobile={initialMobile}
+            onUpdated={() => showToast("Profile updated successfully")}
+            onError={() => showToast("Failed to update profile")}
+          />
         </div>
 
         {/* Order History */}
@@ -147,13 +200,13 @@ export default function ProfilePage() {
                     <div className="p-5 flex justify-between items-center">
                       <div>
                         <p className="text-lg font-black mb-1">₹{Number(order.total).toFixed(2)}</p>
-                        <p className="text-xs font-bold text-zinc-500">{order.items.length} Item{order.items.length !== 1 ? 's' : ''}</p>
+                        <p className="text-xs font-bold text-zinc-500">{order.items.length} Item{order.items.length !== 1 ? "s" : ""}</p>
                       </div>
                       <div className="text-right">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                          order.fulfillment_status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
-                          order.fulfillment_status === 'Processing' ? 'bg-amber-100 text-amber-800' :
-                          'bg-zinc-100 text-zinc-800'
+                          order.fulfillment_status === "Shipped" ? "bg-blue-100 text-blue-800" :
+                          order.fulfillment_status === "Processing" ? "bg-amber-100 text-amber-800" :
+                          "bg-zinc-100 text-zinc-800"
                         }`}>
                           {order.fulfillment_status}
                         </span>

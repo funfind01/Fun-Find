@@ -34,7 +34,14 @@ export async function POST(req: Request) {
     const address = orderData.shipping_address;
     
     // Construct order items
-    const orderItems = orderData.items.map((item: any) => ({
+    type OrderItemRow = {
+      id: string;
+      name: string;
+      quantity: number;
+      price: number;
+    };
+
+    const orderItems = (orderData.items as OrderItemRow[]).map((item) => ({
       name: item.name,
       sku: item.id.substring(0, 8), // Provide a dummy SKU if not exist
       units: item.quantity,

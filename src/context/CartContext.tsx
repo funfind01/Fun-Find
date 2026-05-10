@@ -33,7 +33,10 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     try {
       const saved = localStorage.getItem("ff_cart");
-      if (saved) setCart(JSON.parse(saved) as CartItem[]);
+      if (saved) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setCart(JSON.parse(saved) as CartItem[]);
+      }
     } catch {}
     setHydrated(true);
   }, []);
