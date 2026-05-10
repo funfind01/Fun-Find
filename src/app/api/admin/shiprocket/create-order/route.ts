@@ -30,8 +30,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Already pushed to Shiprocket" }, { status: 400 });
     }
 
-    // 2. Format payload for Shiprocket API
+    // 2. Pre-flight Validation
     const address = orderData.shipping_address;
+
+    if (!address || !address.address || !address.pin || !address.city) {
+      return NextResponse.json({ error: "Incomplete shipping address. Cannot process." }, { status: 400 });
+    }
+
+    if (!orderData.items || !Array.isArray(orderData.items) || orderData.items.length === 0) {
+      return NextResponse.json({ error: "Order has no items. Cannot process." }, { status: 400 });
+    }
+
+    if (!orderData.customer_name || orderData.customer_name.trim() === "") {
+      return NextResponse.json({ error: "Customer name is required." }, { status: 400 });
+    }
     
     // Construct order items
     type OrderItemRow = {
@@ -60,7 +72,7 @@ export async function POST(req: Request) {
       billing_state: "Maharashtra", // Hardcoded fallback if not provided, Shiprocket requires state
       billing_country: "India",
       billing_email: orderData.customer_email,
-      billing_phone: "9999999999", // Replace with real phone from form if added later
+      billing_phone: "9876543210", // Valid 10-digit format for Shiprocket (dummy fallback)
       shipping_is_billing: true,
       order_items: orderItems,
       payment_method: "Prepaid", // Based on your custom form checkout

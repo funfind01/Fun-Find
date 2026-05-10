@@ -1153,6 +1153,7 @@ function OrdersView() {
 
   const [orders, setOrders] = useState<AdminOrderRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<AdminOrderRow | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/orders")
@@ -1222,14 +1223,14 @@ function OrdersView() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-zinc-100">
-                {["Order ID", "Customer", "Date", "Status", "Amount", "Action"].map((h) => (
+                {["Order ID", "Customer", "Date", "Status", "Amount", "Shiprocket", "Action"].map((h) => (
                   <th key={h} className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              {loading && <tr><td colSpan={6} className="text-center py-8 text-sm text-zinc-400">Loading orders...</td></tr>}
-              {!loading && orders.length === 0 && <tr><td colSpan={6} className="text-center py-8 text-sm text-zinc-400">No orders yet.</td></tr>}
+              {loading && <tr><td colSpan={7} className="text-center py-8 text-sm text-zinc-400">Loading orders...</td></tr>}
+              {!loading && orders.length === 0 && <tr><td colSpan={7} className="text-center py-8 text-sm text-zinc-400">No orders yet.</td></tr>}
               {orders.map((row) => (
                 <tr key={row.id} className="hover:bg-zinc-50 transition-colors">
                   <td className="px-6 py-4 text-sm font-black">#{row.id.split('-')[0].toUpperCase()}</td>
@@ -1268,12 +1269,32 @@ function OrdersView() {
                       </span>
                     )}
                   </td>
+                  <td className="px-6 py-4 text-right">
+                    <button onClick={() => setSelectedOrder(row)} className="material-symbols-outlined text-zinc-400 hover:text-zinc-950 transition-colors">more_horiz</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedOrder(null)}>
+          <div className="bg-white rounded-xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-6 border-b border-zinc-100 bg-zinc-50">
+              <div>
+                <h3 className="text-xl font-black text-zinc-950">Order Details</h3>
+                <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">ID: {selectedOrder.id}</p>
+              </div>
+              <button onClick={() => setSelectedOrder(null)} className="material-symbols-outlined text-zinc-400 hover:text-zinc-950">close</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 bg-zinc-950 text-emerald-400 font-mono text-xs">
+              <pre>{JSON.stringify(selectedOrder, null, 2)}</pre>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -1284,7 +1305,9 @@ function ShiprocketView() {
   const [apiState, setApiState] = useState<"loading" | "connected" | "disconnected">("loading");
   const [apiMessage, setApiMessage] = useState("Checking connection...");
 
-  useEffect(() => {
+  const checkStatus = () => {
+    setApiState("loading");
+    setApiMessage("Checking connection...");
     fetch("/api/admin/shiprocket/status")
       .then((res) => res.json())
       .then((data) => {
@@ -1296,11 +1319,13 @@ function ShiprocketView() {
           setApiMessage(data.message || "Disconnected");
         }
       })
-      .catch((err) => {
+      .catch(() => {
         setApiState("disconnected");
         setApiMessage("Connection Failed");
       });
-  }, []);
+  };
+
+  useEffect(() => { checkStatus(); }, []);
 
   const isConnected = apiState === "connected";
 
@@ -1344,12 +1369,29 @@ function ShiprocketView() {
           <p className="text-zinc-600 text-sm leading-relaxed max-w-lg">
             Connect your Shiprocket account to enable automated order fulfilment, national carrier routing, and real-time tracking across all districts.
           </p>
-          <div className="mt-8 flex gap-3">
-            <button className="bg-zinc-950 hover:bg-black text-white text-xs font-black uppercase tracking-widest px-6 py-3 rounded-lg transition-colors">
-              {isConnected ? "Manage Account" : "Connect Account"}
-            </button>
-            <button className="border border-zinc-200 text-zinc-600 text-xs font-black uppercase tracking-widest px-6 py-3 rounded-lg hover:bg-zinc-50 transition-colors">
-              View Docs
+          <div className="mt-8 flex gap-3 flex-wrap">
+            <a
+              href="https://app.shiprocket.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-zinc-950 hover:bg-black text-white text-xs font-black uppercase tracking-widest px-6 py-3 rounded-lg transition-colors flex items-center justify-center"
+            >
+              {isConnected ? "Manage Account" : "Open Dashboard"}
+            </a>
+            <a
+              href="https://checkout.shiprocket.in/settings/platform"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="border border-zinc-200 text-zinc-600 text-xs font-black uppercase tracking-widest px-6 py-3 rounded-lg hover:bg-zinc-50 transition-colors flex items-center justify-center"
+            >
+              Checkout Settings
+            </a>
+            <button
+              onClick={checkStatus}
+              className="border border-zinc-200 text-zinc-600 text-xs font-black uppercase tracking-widest px-6 py-3 rounded-lg hover:bg-zinc-50 transition-colors flex items-center gap-2"
+            >
+              <span className={`material-symbols-outlined text-sm ${apiState === "loading" ? "animate-spin" : ""}`}>refresh</span>
+              Recheck
             </button>
           </div>
         </div>
@@ -1371,9 +1413,14 @@ function ShiprocketView() {
               </div>
             ))}
           </div>
-          <button className="mt-8 w-full border border-zinc-700 hover:bg-zinc-800 text-white py-3 rounded-lg text-xs font-black uppercase tracking-widest transition-colors">
-            Configure Now
-          </button>
+          <a
+            href="https://checkout.shiprocket.in/settings/payment"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-center mt-8 w-full border border-zinc-700 hover:bg-zinc-800 text-white py-3 rounded-lg text-xs font-black uppercase tracking-widest transition-colors"
+          >
+            Payment Onboarding →
+          </a>
         </div>
       </div>
     </section>
