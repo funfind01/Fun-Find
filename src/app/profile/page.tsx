@@ -8,67 +8,61 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 
 function ProfileDetailsForm({
-  initialName,
-  initialMobile,
-  onUpdated,
-  onError,
+  profile,
+  email,
+  onProfileChange,
+  onSave,
+  saving,
 }: {
-  initialName: string;
-  initialMobile: string;
-  onUpdated: () => void;
-  onError: () => void;
+  profile: { name: string; mobile: string };
+  email: string;
+  onProfileChange: (field: "name" | "mobile", value: string) => void;
+  onSave: () => Promise<void>;
+  saving: boolean;
 }) {
-  const [name, setName] = useState(initialName);
-  const [mobile, setMobile] = useState(initialMobile);
-  const [saving, setSaving] = useState(false);
-
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const { error } = await supabase.auth.updateUser({
-        data: { name, mobile },
-      });
-
-      if (error) {
-        onError();
-        return;
-      }
-
-      onUpdated();
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
-    <div className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-sm space-y-6">
-      <h2 className="text-sm font-black uppercase tracking-widest text-zinc-400">Profile Details</h2>
-      <form onSubmit={handleUpdateProfile} className="space-y-4">
-        <div>
-          <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1.5">Full Name</label>
+    <div className="bg-black rounded-[32px] p-8 shadow-[0_18px_60px_rgba(0,0,0,0.14)] text-white border border-white/10">
+      <div className="mb-8 space-y-3">
+        <h2 className="text-[28px] font-black tracking-[-0.04em]">Account Details</h2>
+        <p className="text-sm text-zinc-400 leading-6 max-w-xl">
+          Manage your digital boutique experience, track recent acquisitions, and update your delivery preferences.
+        </p>
+      </div>
+
+      <form onSubmit={async (e) => { e.preventDefault(); await onSave(); }} className="space-y-6">
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black uppercase tracking-[0.32em] text-zinc-500">Full Name</label>
           <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full bg-zinc-50 border-b-2 border-zinc-200 focus:border-zinc-950 outline-none p-2.5 text-sm transition-colors"
+            value={profile.name}
+            onChange={(e) => onProfileChange("name", e.target.value)}
+            className="w-full bg-white/5 border-b border-white/10 rounded-none px-4 py-3 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-[#29fe57] focus:ring-2 focus:ring-[#29fe57]/20 transition"
             placeholder="Your Name"
           />
         </div>
-        <div>
-          <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1.5">Mobile Number</label>
+
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black uppercase tracking-[0.32em] text-zinc-500">Mobile Number</label>
           <input
-            value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
-            className="w-full bg-zinc-50 border-b-2 border-zinc-200 focus:border-zinc-950 outline-none p-2.5 text-sm transition-colors"
+            value={profile.mobile}
+            onChange={(e) => onProfileChange("mobile", e.target.value)}
+            className="w-full bg-white/5 border-b border-white/10 rounded-none px-4 py-3 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-[#29fe57] focus:ring-2 focus:ring-[#29fe57]/20 transition"
             placeholder="+91 0000000000"
           />
         </div>
+
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black uppercase tracking-[0.32em] text-zinc-500">Email Address</label>
+          <div className="w-full bg-white/5 border-b border-white/10 px-4 py-3 text-sm text-zinc-200">
+            {email}
+          </div>
+        </div>
+
         <button
           type="submit"
           disabled={saving}
-          className="w-full bg-zinc-950 text-white py-3 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-black transition-colors mt-2 disabled:opacity-60"
+          className="w-full bg-[#29fe57] text-black py-4 rounded-2xl font-black uppercase tracking-[0.18em] hover:bg-[#20d14b] transition disabled:opacity-60"
         >
-          {saving ? "Saving..." : "Save Changes"}
+          {saving ? "Updating…" : "Update Information"}
         </button>
       </form>
     </div>
@@ -89,7 +83,9 @@ export default function ProfilePage() {
 
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
-  
+  const [profileData, setProfileData] = useState({ name: "", mobile: "" });
+  const [savingProfile, setSavingProfile] = useState(false);
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/auth");
@@ -98,6 +94,11 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user) {
+      setProfileData({
+        name: String(user.user_metadata?.name ?? ""),
+        mobile: String(user.user_metadata?.mobile ?? ""),
+      });
+
       // Fetch user's orders
       const fetchOrders = async () => {
         const { data, error } = await supabase
@@ -121,12 +122,37 @@ export default function ProfilePage() {
     router.push("/");
   };
 
+  const handleProfileChange = (field: "name" | "mobile", value: string) => {
+    setProfileData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          name: profileData.name,
+          mobile: profileData.mobile,
+        },
+      });
+
+      if (error) {
+        showToast("Failed to update profile");
+        return;
+      }
+
+      showToast("Profile updated successfully");
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to update profile");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   if (authLoading || !user) {
     return <div className="min-h-screen bg-zinc-50 flex items-center justify-center text-sm font-bold text-zinc-400">Loading profile...</div>;
   }
-
-  const initialName = String(user.user_metadata?.name ?? "");
-  const initialMobile = String(user.user_metadata?.mobile ?? "");
 
   return (
     <main className="min-h-screen bg-[#f9f9fa] text-zinc-950 pb-20">
@@ -145,38 +171,54 @@ export default function ProfilePage() {
         </div>
       </nav>
 
-      <div className="max-w-5xl mx-auto px-6 pt-32 grid grid-cols-1 md:grid-cols-12 gap-12">
-        {/* Profile Sidebar */}
-        <div className="md:col-span-4 space-y-8">
-          <div className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-sm">
-            <div className="w-16 h-16 bg-[#CCFF00] rounded-full flex items-center justify-center text-2xl font-black mb-4">
-              {initialName ? initialName.substring(0, 1).toUpperCase() : user.email?.substring(0, 1).toUpperCase()}
-            </div>
-            <h1 className="text-2xl font-black tracking-tight">{initialName || "Collector"}</h1>
-            <p className="text-sm text-zinc-500 font-medium">{user.email}</p>
-          </div>
+      <div className="max-w-5xl mx-auto px-6 pt-32">
+        <div className="mb-14">
+          <p className="text-sm uppercase tracking-[0.35em] text-zinc-500">My Profile</p>
+          <h1 className="mt-4 text-5xl font-black tracking-[-0.05em] text-zinc-950">My Profile</h1>
+          <p className="mt-4 max-w-2xl text-base text-zinc-500 leading-7">
+            Manage your digital boutique experience, track recent acquisitions, and update your delivery preferences.
+          </p>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
+          {/* Profile Sidebar */}
+        <div className="md:col-span-4 space-y-8">
           <ProfileDetailsForm
-            key={user.id}
-            initialName={initialName}
-            initialMobile={initialMobile}
-            onUpdated={() => showToast("Profile updated successfully")}
-            onError={() => showToast("Failed to update profile")}
+            profile={profileData}
+            email={user.email || ""}
+            onProfileChange={handleProfileChange}
+            onSave={handleSaveProfile}
+            saving={savingProfile}
           />
+
+          <div className="bg-white rounded-[32px] p-6 shadow-[0_18px_60px_rgba(0,0,0,0.08)] border border-zinc-200">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.32em] text-zinc-500">Shipping Address</p>
+                <p className="mt-3 font-black text-zinc-950">221 High Street, Digital District, NY 10001</p>
+              </div>
+              <span className="material-symbols-outlined text-zinc-400">arrow_forward</span>
+            </div>
+          </div>
         </div>
 
         {/* Order History */}
-        <div className="md:col-span-8">
-          <div className="bg-white rounded-2xl p-8 border border-zinc-200 shadow-sm">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-black tracking-tight">Order History</h2>
-              <span className="material-symbols-outlined text-zinc-300 text-3xl">shopping_bag</span>
+        <div className="md:col-span-8 space-y-6">
+          <div className="bg-white rounded-[32px] p-8 shadow-[0_18px_60px_rgba(0,0,0,0.08)] border border-zinc-200">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
+              <div>
+                <h2 className="text-3xl font-black tracking-tight">Order History</h2>
+                <p className="text-sm text-zinc-500">Track your latest purchases and shipment status.</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-[0.32em] text-zinc-400">{orders.length} items total</p>
+              </div>
             </div>
 
             {loadingOrders ? (
               <div className="py-12 text-center text-sm font-bold text-zinc-400">Fetching orders...</div>
             ) : orders.length === 0 ? (
-              <div className="py-16 text-center bg-zinc-50 rounded-xl border border-dashed border-zinc-200">
+              <div className="py-16 text-center bg-zinc-50 rounded-3xl border border-dashed border-zinc-200">
                 <span className="material-symbols-outlined text-4xl text-zinc-300 mb-3 block">inventory_2</span>
                 <p className="text-sm font-bold text-zinc-500 mb-4">No orders placed yet.</p>
                 <Link href="/collection" className="bg-white border border-zinc-200 px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-zinc-50 transition-colors">
@@ -185,41 +227,59 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="space-y-6">
-                {orders.map(order => (
-                  <div key={order.id} className="border border-zinc-200 rounded-xl overflow-hidden hover:border-zinc-300 transition-colors">
-                    <div className="bg-zinc-50 px-5 py-3 border-b border-zinc-200 flex justify-between items-center">
-                      <div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block">Order ID</span>
-                        <span className="text-xs font-bold font-mono">#{order.id.split('-')[0].toUpperCase()}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block">Date</span>
-                        <span className="text-xs font-bold">{new Date(order.created_at).toLocaleDateString()}</span>
+                {orders.map((order) => {
+                  const item = (order.items as any[])[0] || {};
+                  const itemName = item.name || `Order #${order.id.split("-")[0].toUpperCase()}`;
+                  const itemImage = item.image || "";
+                  const status = order.fulfillment_status || "Unknown";
+                  return (
+                    <div key={order.id} className="rounded-[32px] border border-zinc-200 p-5 hover:border-zinc-300 transition-colors bg-white">
+                      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div className="flex gap-4 items-center">
+                          <div className="w-24 h-24 rounded-[26px] bg-zinc-100 overflow-hidden flex items-center justify-center">
+                            {itemImage ? (
+                              <img src={itemImage} alt={itemName} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="material-symbols-outlined text-zinc-300 text-3xl">shopping_bag</span>
+                            )}
+                          </div>
+                          <div>
+                            <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-[10px] font-black uppercase tracking-[0.28em]">
+                              {status.toLowerCase() === "processing" ? "In Transit" : status}
+                            </span>
+                            <h3 className="mt-4 text-xl font-black tracking-tight text-zinc-950">{itemName}</h3>
+                            <p className="mt-2 text-xs uppercase tracking-[0.28em] text-zinc-400">#{order.id.split("-")[0].toUpperCase()}</p>
+                            <p className="mt-2 text-sm text-zinc-500">Ordered {new Date(order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-start gap-4 text-right md:items-end">
+                          <p className="text-2xl font-black text-zinc-950">₹{typeof order.total === 'number' ? order.total.toFixed(2) : parseFloat(String(order.total) || '0').toFixed(2)}</p>
+                          <Link href="/checkout" className="text-sm font-black uppercase tracking-[0.28em] text-emerald-700 hover:text-emerald-900 transition">Track Order</Link>
+                        </div>
                       </div>
                     </div>
-                    <div className="p-5 flex justify-between items-center">
-                      <div>
-                        <p className="text-lg font-black mb-1">₹{Number(order.total).toFixed(2)}</p>
-                        <p className="text-xs font-bold text-zinc-500">{order.items.length} Item{order.items.length !== 1 ? "s" : ""}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                          order.fulfillment_status === "Shipped" ? "bg-blue-100 text-blue-800" :
-                          order.fulfillment_status === "Processing" ? "bg-amber-100 text-amber-800" :
-                          "bg-zinc-100 text-zinc-800"
-                        }`}>
-                          {order.fulfillment_status}
-                        </span>
-                        {order.shiprocket_awb && (
-                          <p className="text-[10px] font-bold text-zinc-500 mt-2">AWB: {order.shiprocket_awb}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
+
+          <div className="bg-white rounded-[32px] p-8 shadow-[0_18px_60px_rgba(0,0,0,0.08)] border border-dashed border-zinc-200">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-zinc-950 text-white">
+                <span className="material-symbols-outlined text-xl">sparkles</span>
+              </div>
+              <div>
+                <p className="text-xl font-black text-zinc-950">Curated for you</p>
+                <p className="mt-3 text-sm text-zinc-500 max-w-xl">Based on your history, we think you'll love the new Digital Nomad Collection.</p>
+                <Link href="/collection" className="mt-6 inline-flex items-center gap-2 rounded-full border border-zinc-900 px-5 py-3 text-sm font-black uppercase tracking-[0.28em] text-zinc-900 hover:bg-zinc-100 transition">
+                  Explore Drops <span className="material-symbols-outlined text-base">arrow_forward</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
         </div>
       </div>
     </main>

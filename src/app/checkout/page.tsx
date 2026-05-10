@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import Script from "next/script";
 import { useAuth } from "@/context/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const GST_RATE = 0.18; // 18% GST
 
@@ -16,10 +16,24 @@ export default function CheckoutPage() {
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [sdkReady, setSdkReady] = useState(false);
 
   const gst = totalPrice * GST_RATE;
   const discount = promoApplied ? totalPrice * 0.1 : 0;
   const total = totalPrice + gst - discount;
+
+  // Check if SDK is loaded
+  useEffect(() => {
+    const checkSDK = () => {
+      // @ts-ignore
+      if (typeof window !== "undefined" && window.HeadlessCheckout) {
+        setSdkReady(true);
+      } else {
+        setTimeout(checkSDK, 500);
+      }
+    };
+    checkSDK();
+  }, []);
 
   const handleApplyPromo = () => {
     if (promoCode.trim().toUpperCase() === "FUNFIND10") {
@@ -33,11 +47,23 @@ export default function CheckoutPage() {
 
   const handleShiprocketCheckout = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (cart.length === 0) return;
+    if (cart.length === 0) {
+      showToast("Your cart is empty");
+      return;
+    }
+
+    // Check if SDK is ready
+    // @ts-ignore
+    if (!window.HeadlessCheckout) {
+      showToast("Checkout SDK is still loading. Please wait a moment and try again.");
+      return;
+    }
     
     setIsProcessing(true);
     try {
-      showToast("Initiating Shiprocket Checkout...");
+      showToast("Initiating checkout...");
+      
+      // Get token from your backend
       const res = await fetch("/api/shiprocket/token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -45,28 +71,28 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       
-      if (data.token) {
-        // @ts-ignore
-        if (typeof window !== "undefined" && window.HeadlessCheckout) {
-          // @ts-ignore
-          window.HeadlessCheckout.addToCart(e.nativeEvent, data.token, { fallbackUrl: window.location.origin + "/checkout" });
-        } else {
-          showToast("Shiprocket SDK not loaded yet. Please refresh and try again.");
-        }
-      } else {
-        showToast("Failed to initialize checkout. " + (data.error || ""));
+      if (!data.token) {
+        showToast("Failed to initialize checkout");
+        setIsProcessing(false);
+        return;
       }
+
+      // Initialize Shiprocket checkout with token
+      // @ts-ignore
+      window.HeadlessCheckout.initiate(data.token, {
+        fallbackUrl: window.location.origin + "/checkout"
+      });
+      
     } catch (err) {
-      console.error(err);
-      showToast("Something went wrong with Shiprocket checkout.");
-    } finally {
+      console.error("Checkout error:", err);
+      showToast("Something went wrong with checkout");
       setIsProcessing(false);
     }
   };
 
   return (
     <main className="min-h-screen bg-[#f9f9fa] text-[#1a1c1d]" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
-      <Script src="https://checkout-ui.shiprocket.com/assets/js/channels/shopify.js" strategy="lazyOnload" />
+      <Script src="https://checkout-ui.shiprocket.com/assets/js/channels/shopify.js" strategy="afterInteractive" />
       <link rel="stylesheet" href="https://checkout-ui.shiprocket.com/assets/styles/shopify.css" />
       <input type="hidden" value="funfind.shop" id="sellerDomain" />
       
@@ -208,10 +234,10 @@ export default function CheckoutPage() {
                   <button
                     onClick={handleShiprocketCheckout}
                     type="button"
-                    disabled={isProcessing}
+                    disabled={isProcessing || !sdkReady}
                     className="w-full bg-zinc-950 text-[#CCFF00] py-5 rounded-xl font-black text-lg uppercase tracking-widest hover:bg-black hover:text-white transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                   >
-                    {isProcessing ? "Processing..." : "Fast Checkout"}
+                    {isProcessing ? "Processing..." : sdkReady ? "Fast Checkout" : "Loading Checkout..."}
                     <span className="material-symbols-outlined">{isProcessing ? "sync" : "bolt"}</span>
                   </button>
                   <p className="text-center text-xs text-zinc-400 mt-4">
