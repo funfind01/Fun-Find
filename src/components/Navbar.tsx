@@ -35,7 +35,7 @@ const Navbar = () => {
             {[
               { name: "Home", href: "/" },
               { name: "All Products", href: "/collection" },
-              { name: "Contact Us", href: "#" },
+              { name: "Contact Us", href: "/contact" },
             ].map((link) => (
               <div key={link.name} className="group relative">
                 <Link 

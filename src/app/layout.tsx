@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
-import PageWrapper from "@/components/PageWrapper";
+import NextTopLoader from "nextjs-toploader";
 import { CartProvider } from "@/context/CartContext";
 import CartDrawer from "@/components/CartDrawer";
 
@@ -37,10 +37,21 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             <SmoothScroll>
-              <PageWrapper>
+              <NextTopLoader
+                color="#00711f"
+                initialPosition={0.08}
+                crawlSpeed={200}
+                height={3}
+                crawl={true}
+                showSpinner={false}
+                easing="ease"
+                speed={200}
+                shadow="0 0 10px #00711f,0 0 5px #00711f"
+              />
+              <div className="flex flex-col flex-1">
                 {children}
-                <CartDrawer />
-              </PageWrapper>
+              </div>
+              <CartDrawer />
             </SmoothScroll>
           </CartProvider>
         </AuthProvider>
