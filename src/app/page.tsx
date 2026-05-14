@@ -170,6 +170,7 @@ export default async function Home() {
               <Link className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-50 transition-opacity" href="/legal/shipping">Shipping</Link>
               <Link className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-50 transition-opacity" href="/legal/returns">Returns</Link>
               <Link className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-50 transition-opacity" href="/legal/privacy">Privacy</Link>
+              <Link className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-50 transition-opacity" href="/contact">Contact</Link>
             </div>
             <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">© 2024 Fun Find © 2024</div>
           </div>

@@ -22,18 +22,7 @@ export default function CheckoutPage() {
   const discount = promoApplied ? totalPrice * 0.1 : 0;
   const total = totalPrice + gst - discount;
 
-  // Check if SDK is loaded
-  useEffect(() => {
-    const checkSDK = () => {
-      // @ts-ignore
-      if (typeof window !== "undefined" && window.HeadlessCheckout) {
-        setSdkReady(true);
-      } else {
-        setTimeout(checkSDK, 500);
-      }
-    };
-    checkSDK();
-  }, []);
+  // SDK readiness will be set when the script loads
 
   const handleApplyPromo = () => {
     if (promoCode.trim().toUpperCase() === "FUNFIND10") {
@@ -45,56 +34,76 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleShiprocketCheckout = async (e: React.MouseEvent) => {
+  const handleRazorpayCheckout = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (cart.length === 0) {
       showToast("Your cart is empty");
       return;
     }
-
-    // Check if SDK is ready
-    // @ts-ignore
-    if (!window.HeadlessCheckout) {
-      showToast("Checkout SDK is still loading. Please wait a moment and try again.");
+    
+    if (!user) {
+      showToast("Please log in to complete your purchase.");
+      window.location.href = "/auth";
       return;
     }
-    
+
     setIsProcessing(true);
     try {
       showToast("Initiating checkout...");
       
-      // Get token from your backend
-      const res = await fetch("/api/shiprocket/token", {
+      // Create order from backend
+      const res = await fetch("/api/razorpay/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart })
+        body: JSON.stringify({ amount: total })
       });
-      const data = await res.json();
+      const order = await res.json();
       
-      if (!data.token) {
+      if (!order || !order.id) {
         showToast("Failed to initialize checkout");
         setIsProcessing(false);
         return;
       }
 
-      // Initialize Shiprocket checkout with token
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Enter the Key ID generated from the Dashboard
+        amount: order.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+        currency: order.currency,
+        name: "Fun Find",
+        description: "Purchase Transaction",
+        order_id: order.id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+        handler: function (response: any) {
+          showToast(`Payment successful! Payment ID: ${response.razorpay_payment_id}`);
+          // You can also verify payment on your backend here and clear the cart
+        },
+        prefill: {
+          name: user?.user_metadata?.name || "Customer",
+          email: user?.email || "",
+          contact: ""
+        },
+        theme: {
+          color: "#09090b" // zinc-950
+        }
+      };
+
       // @ts-ignore
-      window.HeadlessCheckout.initiate(data.token, {
-        fallbackUrl: window.location.origin + "/checkout"
+      const rzp1 = new window.Razorpay(options);
+      rzp1.on('payment.failed', function (response: any){
+        showToast(`Payment Failed: ${response.error.description}`);
       });
+      rzp1.open();
       
     } catch (err) {
       console.error("Checkout error:", err);
       showToast("Something went wrong with checkout");
+    } finally {
       setIsProcessing(false);
     }
   };
 
   return (
     <main className="min-h-screen bg-[#f9f9fa] text-[#1a1c1d]" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
-      <Script src="https://checkout-ui.shiprocket.com/assets/js/channels/shopify.js" strategy="afterInteractive" />
-      <link rel="stylesheet" href="https://checkout-ui.shiprocket.com/assets/styles/shopify.css" />
-      <input type="hidden" value="funfind.shop" id="sellerDomain" />
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" onLoad={() => setSdkReady(true)} />
       
       {/* Nav */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200">
@@ -232,16 +241,16 @@ export default function CheckoutPage() {
                 {/* Fast Checkout CTA */}
                 <div className="pt-8">
                   <button
-                    onClick={handleShiprocketCheckout}
+                    onClick={handleRazorpayCheckout}
                     type="button"
                     disabled={isProcessing || !sdkReady}
                     className="w-full bg-zinc-950 text-[#CCFF00] py-5 rounded-xl font-black text-lg uppercase tracking-widest hover:bg-black hover:text-white transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                   >
-                    {isProcessing ? "Processing..." : sdkReady ? "Fast Checkout" : "Loading Checkout..."}
-                    <span className="material-symbols-outlined">{isProcessing ? "sync" : "bolt"}</span>
+                    {isProcessing ? "Processing..." : sdkReady ? "Pay with Razorpay" : "Loading Checkout..."}
+                    <span className="material-symbols-outlined">{isProcessing ? "sync" : "lock"}</span>
                   </button>
                   <p className="text-center text-xs text-zinc-400 mt-4">
-                    Powered by Shiprocket. 1-click seamless purchase.
+                    Secure payments powered by Razorpay.
                   </p>
                 </div>
               </>
@@ -255,9 +264,10 @@ export default function CheckoutPage() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <span className="text-xl font-black tracking-tighter uppercase text-zinc-950">Fun Find</span>
           <div className="flex gap-8">
-            {["Returns", "Contact", "Privacy"].map(l => (
-              <a key={l} href="#" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">{l}</a>
-            ))}
+            <Link href="/legal/returns" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">Returns</Link>
+            <Link href="/contact" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">Contact</Link>
+            <Link href="/legal/privacy" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">Privacy</Link>
+            <Link href="/legal/terms" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">Terms</Link>
           </div>
           <span className="text-xs text-zinc-400">© 2024 Fun Find. All Rights Reserved.</span>
         </div>

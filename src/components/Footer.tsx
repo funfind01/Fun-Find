@@ -11,15 +11,11 @@ const Footer = () => {
         </div>
         
         <div className="flex flex-wrap justify-center gap-x-12 gap-y-6 mb-16">
-          {["Shipping", "Returns", "Privacy", "TikTok", "Instagram"].map((link) => (
-            <Link 
-              key={link}
-              href="#" 
-              className="text-[10px] uppercase tracking-[0.3em] text-white/30 hover:text-brand-neon transition-colors"
-            >
-              {link}
-            </Link>
-          ))}
+          <Link href="/legal/shipping" className="text-[10px] uppercase tracking-[0.3em] text-white/30 hover:text-brand-neon transition-colors">Shipping</Link>
+          <Link href="/legal/returns" className="text-[10px] uppercase tracking-[0.3em] text-white/30 hover:text-brand-neon transition-colors">Returns</Link>
+          <Link href="/legal/privacy" className="text-[10px] uppercase tracking-[0.3em] text-white/30 hover:text-brand-neon transition-colors">Privacy</Link>
+          <Link href="/legal/terms" className="text-[10px] uppercase tracking-[0.3em] text-white/30 hover:text-brand-neon transition-colors">Terms</Link>
+          <Link href="/contact" className="text-[10px] uppercase tracking-[0.3em] text-white/30 hover:text-brand-neon transition-colors">Contact</Link>
         </div>
         
         <div className="divider-tech w-full max-w-2xl mb-12"></div>
