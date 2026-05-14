@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 const GST_RATE = 0.18; // 18% GST
 
 export default function CheckoutPage() {
-  const { cart, removeFromCart, updateQuantity, totalPrice } = useCart();
+  const { cart, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
   const { user, showToast } = useAuth();
   
   const [promoCode, setPromoCode] = useState("");
@@ -17,6 +17,17 @@ export default function CheckoutPage() {
   const [promoError, setPromoError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [sdkReady, setSdkReady] = useState(false);
+
+  // Shipping Address State
+  const [address, setAddress] = useState({
+    name: user?.user_metadata?.name || "",
+    phone: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
 
   const gst = totalPrice * GST_RATE;
   const discount = promoApplied ? totalPrice * 0.1 : 0;
@@ -36,14 +47,8 @@ export default function CheckoutPage() {
 
   const handleRazorpayCheckout = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (cart.length === 0) {
-      showToast("Your cart is empty");
-      return;
-    }
-    
-    if (!user) {
-      showToast("Please log in to complete your purchase.");
-      window.location.href = "/auth";
+    if (!address.addressLine1 || !address.city || !address.pincode || !address.phone) {
+      showToast("Please fill in all required shipping details.");
       return;
     }
 
@@ -66,23 +71,54 @@ export default function CheckoutPage() {
       }
 
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Enter the Key ID generated from the Dashboard
-        amount: order.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
         currency: order.currency,
         name: "Fun Find",
         description: "Purchase Transaction",
-        order_id: order.id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
-        handler: function (response: any) {
-          showToast(`Payment successful! Payment ID: ${response.razorpay_payment_id}`);
-          // You can also verify payment on your backend here and clear the cart
+        order_id: order.id,
+        handler: async function (response: any) {
+          setIsProcessing(true);
+          showToast("Verifying payment...");
+          
+          try {
+            const verifyRes = await fetch("/api/razorpay/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                cart,
+                user,
+                totals: { totalPrice, gst, discount, total },
+                shippingAddress: address
+              })
+            });
+            
+            const verifyData = await verifyRes.json();
+            
+            if (verifyData.success) {
+              showToast("Order placed successfully!");
+              clearCart();
+              window.location.href = "/checkout/success";
+            } else {
+              showToast("Payment verification failed. Please contact support.");
+            }
+          } catch (err) {
+            console.error("Verification error:", err);
+            showToast("Something went wrong during verification.");
+          } finally {
+            setIsProcessing(false);
+          }
         },
         prefill: {
-          name: user?.user_metadata?.name || "Customer",
+          name: address.name || user?.user_metadata?.name || "Customer",
           email: user?.email || "",
-          contact: ""
+          contact: address.phone
         },
         theme: {
-          color: "#09090b" // zinc-950
+          color: "#09090b"
         }
       };
 
@@ -226,6 +262,79 @@ export default function CheckoutPage() {
                   </div>
                   {promoApplied && <p className="text-xs font-bold text-green-800">✓ 10% discount applied!</p>}
                   {promoError && <p className="text-xs font-bold text-red-700">{promoError}</p>}
+                </div>
+
+                {/* Shipping Form */}
+                <div className="border-t border-zinc-100 pt-8 mt-8">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-zinc-950 mb-6 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-xl">local_shipping</span>
+                    Shipping Address
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">Full Name</label>
+                      <input 
+                        value={address.name}
+                        onChange={e => setAddress({...address, name: e.target.value})}
+                        className="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-zinc-950 outline-none transition-all"
+                        placeholder="John Doe"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">Phone Number</label>
+                      <input 
+                        value={address.phone}
+                        onChange={e => setAddress({...address, phone: e.target.value})}
+                        className="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-zinc-950 outline-none transition-all"
+                        placeholder="+91 99999 99999"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">Pincode</label>
+                      <input 
+                        value={address.pincode}
+                        onChange={e => setAddress({...address, pincode: e.target.value})}
+                        className="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-zinc-950 outline-none transition-all"
+                        placeholder="110001"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">Address Line 1</label>
+                      <input 
+                        value={address.addressLine1}
+                        onChange={e => setAddress({...address, addressLine1: e.target.value})}
+                        className="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-zinc-950 outline-none transition-all"
+                        placeholder="House No., Building, Street"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">Address Line 2 (Optional)</label>
+                      <input 
+                        value={address.addressLine2}
+                        onChange={e => setAddress({...address, addressLine2: e.target.value})}
+                        className="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-zinc-950 outline-none transition-all"
+                        placeholder="Landmark, Area"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">City</label>
+                      <input 
+                        value={address.city}
+                        onChange={e => setAddress({...address, city: e.target.value})}
+                        className="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-zinc-950 outline-none transition-all"
+                        placeholder="New Delhi"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">State</label>
+                      <input 
+                        value={address.state}
+                        onChange={e => setAddress({...address, state: e.target.value})}
+                        className="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-zinc-950 outline-none transition-all"
+                        placeholder="Delhi"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Security badges */}
