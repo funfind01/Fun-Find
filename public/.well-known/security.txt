@@ -1,0 +1,4 @@
+Contact: security@funfind.shop
+Expires: 2027-05-15T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://funfind.shop/.well-known/security.txt

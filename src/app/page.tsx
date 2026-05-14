@@ -29,29 +29,29 @@ export default async function Home() {
         }
       `}} />
 
-      <div className="bg-[#f9f9fa] text-[#1a1c1d] selection:bg-[#29fe57] selection:text-[#00711f]" style={{fontFamily: "'Plus Jakarta Sans', sans-serif"}}>
+      <div className="bg-[#f9f9fa] text-[#1a1c1d] selection:bg-[#29fe57] selection:text-[#00711f] overflow-x-hidden" style={{fontFamily: "'Plus Jakarta Sans', sans-serif"}}>
         <Navbar />
 
-        <main className="pt-20">
-          <section className="relative min-h-[700px] h-[90vh] w-full flex items-center justify-center overflow-hidden bg-[#eeeeef]">
+        <main className="pt-24 sm:pt-20">
+          <section className="relative min-h-[560px] md:min-h-[700px] h-auto md:h-[90vh] w-full flex items-center justify-center overflow-hidden bg-[#eeeeef]">
             <div className="absolute inset-0 z-0">
               <img className="w-full h-full object-cover grayscale contrast-125 opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCW9AQFxIPyy49vxLdTz2x9iQdF3VHsBEztrKTPaI3ByyjkRSpyRl_dyEI0ojZjk9au2Jl6IAYBU2SyUn58TTY7VjAlr-sf2LSXoAUTvwAx4MhAYsdGwIZJJ8oy1Q194hhDp7DeR8fSkWp9wuOON-CN-OmH_A3ctpMLw2FFNysksqni8CV3CGRxWPuv8EkW5GJacNxLdVSoPt7xH4YIXgfruxf5FsduZD7nlb0LizYyvP7qo12TCZIEZOT2hZH6Xb4xpp-iegdlW0E5"/>
               <div className="absolute inset-0 bg-gradient-to-r from-[#f9f9fa]/40 to-transparent"></div>
             </div>
-            <div className="relative z-10 max-w-[1440px] mx-auto px-6 lg:px-12 w-full">
-              <div className="max-w-2xl bg-white/40 backdrop-blur-md p-8 border border-white/20">
-                <span className="text-[14px] leading-[1.2] tracking-[0.05em] font-bold text-[#006e1e] mb-4 block uppercase">New Arrival: Velo 01</span>
-                <h1 className="text-[48px] leading-[1.1] tracking-[-0.04em] font-extrabold text-black mb-6">ENGINEERED FOR YOUR POCKET.</h1>
-                <p className="text-[18px] leading-[1.6] text-[#46464a] mb-8 max-w-lg">High-velocity aesthetics meet industrial-grade durability. Every Fun Find product is CNC-milled for the modern collector.</p>
-                <div className="flex gap-4">
-                  <Link href="/collection" className="inline-block bg-black text-white text-[14px] leading-[1.2] tracking-[0.05em] font-bold px-10 py-5 rounded-none hover:bg-[#006e1e] transition-all active:scale-95 uppercase">Shop the Drop</Link>
-                  <Link href="/collection" className="inline-block border border-black text-black text-[14px] leading-[1.2] tracking-[0.05em] font-bold px-10 py-5 rounded-none hover:bg-black hover:text-white transition-all active:scale-95 uppercase">View Lookbook</Link>
+            <div className="relative z-10 max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 w-full">
+              <div className="max-w-2xl bg-white/40 backdrop-blur-md p-5 sm:p-8 border border-white/20">
+                <span className="text-[11px] sm:text-[14px] leading-[1.2] tracking-[0.18em] sm:tracking-[0.05em] font-bold text-[#006e1e] mb-4 block uppercase">New Arrival: Velo 01</span>
+                <h1 className="text-[34px] sm:text-[48px] lg:text-[64px] leading-[1.02] tracking-[-0.05em] font-extrabold text-black mb-5 sm:mb-6">ENGINEERED FOR YOUR POCKET.</h1>
+                <p className="text-[15px] sm:text-[18px] leading-[1.6] text-[#46464a] mb-6 sm:mb-8 max-w-lg">High-velocity aesthetics meet industrial-grade durability. Every Fun Find product is CNC-milled for the modern collector.</p>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                  <Link href="/collection" className="inline-flex items-center justify-center bg-black text-white text-[13px] sm:text-[14px] leading-[1.2] tracking-[0.05em] font-bold px-6 sm:px-10 py-4 sm:py-5 rounded-none hover:bg-[#006e1e] transition-all active:scale-95 uppercase">Shop the Drop</Link>
+                  <Link href="/collection" className="inline-flex items-center justify-center border border-black text-black text-[13px] sm:text-[14px] leading-[1.2] tracking-[0.05em] font-bold px-6 sm:px-10 py-4 sm:py-5 rounded-none hover:bg-black hover:text-white transition-all active:scale-95 uppercase">View Lookbook</Link>
                 </div>
               </div>
             </div>
           </section>
 
-          <section className="py-24 max-w-[1440px] mx-auto px-6 lg:px-12">
+          <section className="py-16 sm:py-24 max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               <div className="md:col-span-8 group relative aspect-[16/9] overflow-hidden bg-zinc-100 border border-zinc-200">
                 {keychainProduct?.image_url && <img className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src={keychainProduct.image_url} alt="Car Keys"/>}
@@ -79,11 +79,11 @@ export default async function Home() {
             </div>
           </section>
 
-          <section className="py-24 bg-[#f3f3f4] overflow-hidden">
-            <div className="max-w-[1440px] mx-auto px-6 lg:px-12 mb-12 flex justify-between items-end">
+          <section className="py-16 sm:py-24 bg-[#f3f3f4] overflow-hidden">
+            <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 mb-8 sm:mb-12 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-end">
               <div>
-                <span className="text-[14px] leading-[1.2] tracking-[0.05em] font-bold text-[#006e1e] uppercase">Live Now</span>
-                <h2 className="text-[48px] leading-[1.1] tracking-[-0.04em] font-extrabold text-black mt-2">TRENDING NOW</h2>
+                <span className="text-[11px] sm:text-[14px] leading-[1.2] tracking-[0.18em] sm:tracking-[0.05em] font-bold text-[#006e1e] uppercase">Live Now</span>
+                <h2 className="text-[32px] sm:text-[48px] leading-[1.05] tracking-[-0.04em] font-extrabold text-black mt-2">TRENDING NOW</h2>
               </div>
               <div className="flex gap-2">
                 <button className="p-3 border border-[#77777b]/30 rounded-full hover:bg-white transition-colors"><span className="material-symbols-outlined">chevron_left</span></button>
@@ -92,9 +92,9 @@ export default async function Home() {
             </div>
 
             <div className="w-full relative group overflow-hidden">
-              <div className="flex gap-6 w-max animate-[marquee_20s_linear_infinite] group-hover:[animation-play-state:paused] px-6">
+              <div className="flex gap-4 sm:gap-6 w-max animate-[marquee_20s_linear_infinite] group-hover:[animation-play-state:paused] px-4 sm:px-6">
                 {marqueeProducts.map((p, idx) => (
-                  <div key={`${p.id}-${idx}`} className="w-[280px] sm:w-[320px] bg-white rounded-2xl border border-zinc-200 overflow-hidden hover:shadow-xl hover:border-zinc-300 transition-all duration-300 group/card shrink-0 flex flex-col">
+                  <div key={`${p.id}-${idx}`} className="w-[240px] sm:w-[280px] md:w-[320px] bg-white rounded-2xl border border-zinc-200 overflow-hidden hover:shadow-xl hover:border-zinc-300 transition-all duration-300 group/card shrink-0 flex flex-col">
                     <Link href={`/product/${p.id}`} className="block aspect-square relative overflow-hidden bg-[#eeeeef]">
                       {p.image_url ? (
                         <img className="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-500" src={p.image_url} alt={p.name}/>
@@ -127,13 +127,13 @@ export default async function Home() {
             </div>
           </section>
 
-          <section className="py-24 max-w-[1440px] mx-auto px-6 lg:px-12 border-t border-zinc-100">
-            <div className="text-center mb-16">
-              <h2 className="text-[48px] leading-[1.1] tracking-[-0.04em] font-extrabold text-black mb-2">JOINED BY 50K+ COLLECTORS</h2>
-              <p className="text-[18px] leading-[1.6] text-[#46464a]">Tag <span className="font-bold text-black">#FunFind</span> to be featured.</p>
+          <section className="py-16 sm:py-24 max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 border-t border-zinc-100">
+            <div className="text-center mb-12 sm:mb-16">
+              <h2 className="text-[30px] sm:text-[48px] leading-[1.05] tracking-[-0.04em] font-extrabold text-black mb-2">JOINED BY 50K+ COLLECTORS</h2>
+              <p className="text-[15px] sm:text-[18px] leading-[1.6] text-[#46464a]">Tag <span className="font-bold text-black">#FunFind</span> to be featured.</p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
               <div className="aspect-square bg-zinc-100 overflow-hidden"><img className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500 cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcIqLERrNkcoYvRALC5tkKq3CzXnXJnhZboaxgVRIEPWTgPTsq-nPCjDJTe_O2FdjCksg2YvILCi8pc8JwNGRqh4fZwhhapGQlV94aVFmpm7Jf5K5hdaZZ1G4Gj6nFGW_n5eWc7VIGOihaDAwAdt7GZQGPV0SQcQ5MJ5ONgsFABPTabbbOlIXf74WvzRVBj_rWfIzaq1GtCiW2DKSl2FWdx5JVvhxPBwSHG1iLFnYhuWP_g6tvFVvCejaBBRxUJ3G1GwQWV5PHQSyv"/></div>
               <div className="aspect-square bg-zinc-100 overflow-hidden"><img className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500 cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhaONeA7cArgtKRSOVYlhH5EPW4qZ4ZF2KMPX7_X-zT2gLEU_sN6K0iEFy4Xy5zUelA3TCYJlzXvYbSRwkMo50hBZfrH_IijXMn_8RZUSFkVZLWU9eogbvm0RU2uO1k6xb8QLM7mwjqR4BWnuBWwAsHDYME2xQ8mjpzmmRRkNA8gVJetXCGofat5bG7JQvaGgSOWBirWb-mjMWUdV3T7lh082aqdf6t8GyAqQ3DrUaJBRahZuNyfnVzja80zY7NNKE6Yqkb0WNPPqv"/></div>
               <div className="aspect-square bg-zinc-100 overflow-hidden"><img className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500 cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2GCP7oF_5LREr7BOu1GG7Tf3Q2KGW5h2dpZTtwRFzlrQ7GUziaBr12Qx3nv4hVA6_sdFDaQXqVesox_tdT_MsKN0VdutjN56ZKForQeRRZK_V9sx2jEgL4Qm1L8pcCVvrrXKuGdPYNiTnXuSAPmPArXGb0Fl17QiAH4Q9bYt82KlDJqcGHrhf-I6MTSnIj-HlUYh8Q6rbV8iW81oYUHZ9-jqjb2Oa7_Ey6jg1m1kT3J4bx3MU0E8zf2zhc1zFiqQXu4PAog4q8hr2"/></div>
@@ -143,18 +143,18 @@ export default async function Home() {
             </div>
           </section>
 
-          <section className="bg-black text-white py-24">
-            <div className="max-w-4xl mx-auto px-6 text-center">
-              <h2 className="text-[48px] leading-[1.1] tracking-[-0.04em] font-extrabold mb-6">DON&apos;T MISS THE NEXT DROP.</h2>
-              <p className="text-[18px] leading-[1.6] mb-10 opacity-80">Be the first to know about limited releases and engineered drops. We only email when it matters.</p>
-              <form className="flex flex-col md:flex-row gap-4 max-w-xl mx-auto">
+          <section className="bg-black text-white py-16 sm:py-24">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+              <h2 className="text-[32px] sm:text-[48px] leading-[1.05] tracking-[-0.04em] font-extrabold mb-6">DON&apos;T MISS THE NEXT DROP.</h2>
+              <p className="text-[15px] sm:text-[18px] leading-[1.6] mb-8 sm:mb-10 opacity-80">Be the first to know about limited releases and engineered drops. We only email when it matters.</p>
+              <form className="flex flex-col md:flex-row gap-3 sm:gap-4 max-w-xl mx-auto">
                 <input
-                  className="flex-1 bg-white/10 border border-white/20 text-white placeholder:text-white/40 px-6 py-4 focus:ring-2 focus:ring-[#29fe57] focus:border-transparent outline-none uppercase text-[14px] leading-[1.2] tracking-[0.05em] font-bold backdrop-blur-md"
+                  className="flex-1 bg-white/10 border border-white/20 text-white placeholder:text-white/40 px-4 sm:px-6 py-4 focus:ring-2 focus:ring-[#29fe57] focus:border-transparent outline-none uppercase text-[13px] sm:text-[14px] leading-[1.2] tracking-[0.05em] font-bold backdrop-blur-md"
                   placeholder="ENTER YOUR EMAIL"
                   type="email"
                   suppressHydrationWarning
                 />
-                <button className="bg-[#29fe57]/90 backdrop-blur-md text-[#00711f] px-10 py-4 text-[14px] leading-[1.2] tracking-[0.05em] font-bold uppercase hover:bg-white transition-colors">Notify Me</button>
+                <button className="bg-[#29fe57]/90 backdrop-blur-md text-[#00711f] px-8 sm:px-10 py-4 text-[13px] sm:text-[14px] leading-[1.2] tracking-[0.05em] font-bold uppercase hover:bg-white transition-colors">Notify Me</button>
               </form>
             </div>
           </section>
