@@ -191,15 +191,7 @@ export default function ProfilePage() {
             saving={savingProfile}
           />
 
-          <div className="bg-white rounded-[32px] p-6 shadow-[0_18px_60px_rgba(0,0,0,0.08)] border border-zinc-200">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.32em] text-zinc-500">Shipping Address</p>
-                <p className="mt-3 font-black text-zinc-950">221 High Street, Digital District, NY 10001</p>
-              </div>
-              <span className="material-symbols-outlined text-zinc-400">arrow_forward</span>
-            </div>
-          </div>
+          {/* Shipping address section removed as requested */}
         </div>
 
         {/* Order History */}

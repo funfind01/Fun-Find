@@ -4,6 +4,7 @@ import QuickAddButton from "./QuickAddButton";
 import Navbar from "@/components/Navbar";
 import Logo from "@/components/Logo";
 import ProductRating from "@/components/ProductRating";
+import MobileFilterSidebar from "@/components/MobileFilterSidebar";
 
 export default async function CollectionPage({ searchParams }: { searchParams: Promise<{ category?: string, q?: string, sort?: string, instock?: string }> }) {
   const params = await searchParams;
@@ -48,10 +49,17 @@ export default async function CollectionPage({ searchParams }: { searchParams: P
   }
 
   return (
-    <div className="bg-[#f9f9fa] text-[#1a1c1d] min-h-screen">
+    <div className="bg-[#f9f9fa] text-[#1a1c1d] min-h-screen overflow-x-hidden">
       <Navbar />
 
-      <div className="max-w-[1440px] mx-auto mt-20 flex">
+      <div className="max-w-[1440px] mx-auto mt-40 sm:mt-20 flex">
+        <MobileFilterSidebar
+          currentCategory={currentCategory}
+          currentSearch={currentSearch}
+          currentSort={currentSort}
+          inStockOnly={inStockOnly}
+          availableMaterials={availableMaterials}
+        />
         <aside className="h-screen w-64 sticky top-20 border-r border-zinc-100 hidden lg:flex flex-col gap-4 p-8 bg-white">
           <div className="mb-6">
             <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-900">FILTERS</h2>
@@ -106,32 +114,89 @@ export default async function CollectionPage({ searchParams }: { searchParams: P
           </div>
         </aside>
 
-        <main className="flex-1 p-6 lg:p-12 min-h-screen">
-          <header className="mb-12">
+        <main className="flex-1 p-4 sm:p-6 lg:p-12 min-h-screen">
+          <header className="mb-8 sm:mb-12">
             <nav className="mb-4 flex items-center gap-2 text-[12px] text-zinc-400 uppercase tracking-widest">
               <Link className="hover:text-black transition-colors" href="/">Shop</Link>
               <span className="material-symbols-outlined text-xs">chevron_right</span>
               <span className="text-zinc-900">Collections</span>
             </nav>
 
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6">
               <div>
-                <h1 className="text-[48px] leading-[1.1] tracking-[-0.04em] font-extrabold text-black mb-2">{currentCategory === "All" ? "All Products" : currentCategory}</h1>
-                <p className="text-[12px] text-zinc-500 tracking-widest uppercase">
+                <h1 style={{scrollMarginTop: '88px'}} className="text-[32px] sm:text-[48px] leading-[1.05] tracking-[-0.04em] font-extrabold text-black mb-2">{currentCategory === "All" ? "All Products" : currentCategory}</h1>
+                <p className="text-[11px] sm:text-[12px] text-zinc-500 tracking-widest uppercase">
                   Showing {products.length} {currentSearch ? `results for "${currentSearch}"` : 'objects'}
                 </p>
               </div>
-              <Link 
-                href={`/collection?category=${currentCategory}${currentSearch ? `&q=${currentSearch}` : ''}&sort=${currentSort === 'price_desc' ? 'featured' : currentSort === 'price_asc' ? 'price_desc' : 'price_asc'}`}
-                className="flex items-center gap-4 border-b border-zinc-200 py-2 px-1 hover:border-black transition-colors text-sm font-bold uppercase"
-              >
-                Sort By: {currentSort === 'newest' ? 'Newest' : currentSort === 'price_asc' ? 'Price (Low)' : currentSort === 'price_desc' ? 'Price (High)' : 'Featured'}
-                <span className="material-symbols-outlined text-lg">expand_more</span>
-              </Link>
+              <div className="flex items-center gap-3">
+                <button
+                  aria-label="Open filters"
+                  onClick={() => window.dispatchEvent(new Event('openMobileFilters'))}
+                  className="inline-flex items-center justify-center p-2 rounded-md bg-white border border-zinc-200 hover:shadow-sm lg:hidden"
+                >
+                  <span className="material-symbols-outlined">filter_list</span>
+                </button>
+
+                <Link 
+                  href={`/collection?category=${currentCategory}${currentSearch ? `&q=${currentSearch}` : ''}&sort=${currentSort === 'price_desc' ? 'featured' : currentSort === 'price_asc' ? 'price_desc' : 'price_asc'}`}
+                  className="flex items-center gap-3 sm:gap-4 border-b border-zinc-200 py-2 px-1 hover:border-black transition-colors text-xs sm:text-sm font-bold uppercase w-fit"
+                >
+                  Sort By: {currentSort === 'newest' ? 'Newest' : currentSort === 'price_asc' ? 'Price (Low)' : currentSort === 'price_desc' ? 'Price (High)' : 'Featured'}
+                  <span className="material-symbols-outlined text-lg">expand_more</span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="lg:hidden mt-6 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mb-3">Filters</p>
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                <Link
+                  href={`/collection?category=All${currentSearch ? `&q=${currentSearch}` : ''}`}
+                  className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-colors ${currentCategory === 'All' ? 'border-black bg-black text-white' : 'border-zinc-200 bg-zinc-50 text-zinc-600'}`}
+                >
+                  All
+                </Link>
+                <Link
+                  href={`/collection?category=${currentCategory}${currentSearch ? `&q=${currentSearch}` : ''}&sort=newest`}
+                  className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-colors ${currentSort === 'newest' ? 'border-black bg-black text-white' : 'border-zinc-200 bg-zinc-50 text-zinc-600'}`}
+                >
+                  Newest
+                </Link>
+                <Link
+                  href={`/collection?category=${currentCategory}${currentSearch ? `&q=${currentSearch}` : ''}&sort=price_asc`}
+                  className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-colors ${currentSort === 'price_asc' ? 'border-black bg-black text-white' : 'border-zinc-200 bg-zinc-50 text-zinc-600'}`}
+                >
+                  Price Low
+                </Link>
+                <Link
+                  href={`/collection?category=${currentCategory}${currentSearch ? `&q=${currentSearch}` : ''}&instock=${inStockOnly ? 'false' : 'true'}`}
+                  className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-colors ${inStockOnly ? 'border-black bg-black text-white' : 'border-zinc-200 bg-zinc-50 text-zinc-600'}`}
+                >
+                  In Stock
+                </Link>
+              </div>
+
+              {availableMaterials.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-zinc-100">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mb-3">Materials</p>
+                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                    {availableMaterials.map((m) => (
+                      <Link
+                        key={m}
+                        href={`/collection?category=${currentCategory}&q=${m}`}
+                        className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-colors ${currentSearch === m ? 'border-black bg-black text-white' : 'border-zinc-200 bg-zinc-50 text-zinc-600'}`}
+                      >
+                        {m}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </header>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-x-6 gap-y-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12">
             {products.map((product, idx) => (
               <Link href={`/product/${product.id}`} key={product.id} className="group flex flex-col bg-white rounded-2xl border border-zinc-200 overflow-hidden hover:shadow-xl hover:border-zinc-300 transition-all duration-300 cursor-pointer">
                 <div className="relative aspect-[4/5] overflow-hidden bg-[#eeeeef]">
@@ -149,17 +214,17 @@ export default async function CollectionPage({ searchParams }: { searchParams: P
 
                   <QuickAddButton product={product} />
                 </div>
-                <div className="flex flex-col gap-1 p-6 bg-white">
-                  <h3 className="text-xl md:text-2xl leading-[1.2] tracking-[-0.02em] font-bold text-zinc-900 group-hover:text-black transition-colors truncate">{product.name}</h3>
-                  <p className="text-[12px] text-zinc-500 uppercase tracking-widest mb-1">{product.category} / Niche</p>
+                <div className="flex flex-col gap-1 p-4 sm:p-6 bg-white">
+                  <h3 className="text-lg sm:text-xl md:text-2xl leading-[1.2] tracking-[-0.02em] font-bold text-zinc-900 group-hover:text-black transition-colors truncate">{product.name}</h3>
+                  <p className="text-[11px] sm:text-[12px] text-zinc-500 uppercase tracking-widest mb-1">{product.category} / Niche</p>
                   <ProductRating productId={product.id} />
-                  <p className="mt-2 text-2xl leading-[1.2] font-bold text-[#006e1e]">₹{product.price.toFixed(2)}</p>
+                  <p className="mt-2 text-xl sm:text-2xl leading-[1.2] font-bold text-[#006e1e]">₹{product.price.toFixed(2)}</p>
                 </div>
               </Link>
             ))}
           </div>
 
-          <div className="mt-24 flex items-center justify-center gap-8">
+          <div className="mt-16 sm:mt-24 flex flex-wrap items-center justify-center gap-4 sm:gap-8">
             <button className="flex items-center gap-2 text-sm font-bold uppercase opacity-30 cursor-not-allowed">
               <span className="material-symbols-outlined">arrow_back</span>
               Prev
@@ -181,7 +246,7 @@ export default async function CollectionPage({ searchParams }: { searchParams: P
         <div className="mb-4">
           <Logo className="text-3xl" inverted />
         </div>
-        <div className="flex flex-wrap justify-center gap-8 mb-12">
+        <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mb-12">
           <Link className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-50" href="/legal/terms">Terms</Link>
           <Link className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-50" href="/legal/shipping">Shipping</Link>
           <Link className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-50" href="/legal/returns">Returns</Link>

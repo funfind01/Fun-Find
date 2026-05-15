@@ -138,19 +138,19 @@ export default function CheckoutPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f9f9fa] text-[#1a1c1d]" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+    <main className="min-h-screen bg-[#f9f9fa] text-[#1a1c1d] overflow-x-hidden" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" onLoad={() => setSdkReady(true)} />
       
       {/* Nav */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200">
-        <div className="flex justify-between items-center h-20 px-6 lg:px-12 max-w-[1440px] mx-auto">
-          <Link href="/" className="text-2xl font-black tracking-tighter uppercase text-zinc-900">Fun Find</Link>
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-4 sm:py-0 sm:h-20 flex items-center justify-between gap-3">
+          <Link href="/" className="text-lg sm:text-2xl font-black tracking-tighter uppercase text-zinc-900 shrink-0">Fun Find</Link>
           <div className="hidden md:flex items-center gap-8 font-medium tracking-tight">
             {["Keychains", "Frames", "Fidgets", "Drops"].map((c) => (
               <Link key={c} href="/collection" className="text-zinc-500 hover:text-zinc-900 transition-colors">{c}</Link>
             ))}
           </div>
-          <div className="flex items-center gap-5 text-zinc-900">
+          <div className="flex items-center gap-3 sm:gap-5 text-zinc-900 shrink-0">
             <Link href="/collection" className="material-symbols-outlined hover:text-zinc-500 transition-colors">arrow_back</Link>
             {user ? (
               <Link href="/profile" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
@@ -164,14 +164,14 @@ export default function CheckoutPage() {
         </div>
       </nav>
 
-      <div className="max-w-3xl mx-auto px-6 pt-32 pb-20">
-        <header className="mb-10 text-center">
-          <h1 className="text-[48px] font-extrabold tracking-tight leading-tight text-zinc-950 mb-2">Your Cart</h1>
-          <p className="text-zinc-500 text-base">Review your items and proceed with our 1-click fast checkout.</p>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32 pb-16 sm:pb-20">
+        <header className="mb-8 sm:mb-10 text-center">
+          <h1 className="text-[32px] sm:text-[48px] font-extrabold tracking-tight leading-tight text-zinc-950 mb-2">Your Cart</h1>
+          <p className="text-zinc-500 text-sm sm:text-base">Review your items and proceed with our 1-click fast checkout.</p>
         </header>
 
         <div className="space-y-6">
-          <div className="bg-white border border-zinc-200 rounded-2xl p-8 shadow-sm">
+          <div className="bg-white border border-zinc-200 rounded-2xl p-4 sm:p-8 shadow-sm">
             {cart.length === 0 ? (
               <div className="py-12 text-center">
                 <span className="material-symbols-outlined text-4xl text-zinc-200 mb-3 block">shopping_cart</span>
@@ -183,8 +183,8 @@ export default function CheckoutPage() {
                 {/* Cart items */}
                 <div className="space-y-5 mb-6">
                   {cart.map((item) => (
-                    <div key={item.id} className="flex gap-4">
-                      <div className="w-20 h-20 bg-zinc-100 overflow-hidden rounded-xl border border-zinc-200 flex-shrink-0">
+                    <div key={item.id} className="flex gap-3 sm:gap-4">
+                      <div className="w-18 h-18 sm:w-20 sm:h-20 bg-zinc-100 overflow-hidden rounded-xl border border-zinc-200 flex-shrink-0">
                         {item.image
                           ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                           : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-zinc-300">image</span></div>
@@ -192,7 +192,7 @@ export default function CheckoutPage() {
                       </div>
                       <div className="flex-1 flex flex-col justify-between py-1">
                         <div>
-                          <h4 className="text-sm font-black">{item.name}</h4>
+                          <h4 className="text-sm sm:text-base font-black leading-snug">{item.name}</h4>
                           <div className="flex items-center gap-1 mt-1 bg-zinc-100 border border-zinc-200 rounded-full w-fit px-1">
                             <button 
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -209,7 +209,7 @@ export default function CheckoutPage() {
                             </button>
                           </div>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center gap-3">
                           <p className="text-sm font-black">₹{(item.price * item.quantity).toFixed(2)}</p>
                           <button onClick={() => removeFromCart(item.id)} className="text-zinc-300 hover:text-red-400 transition-colors">
                             <span className="material-symbols-outlined text-base">close</span>
@@ -243,12 +243,12 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Promo code */}
-                <div className="bg-[#CCFF00] rounded-2xl p-6 mt-6 space-y-3">
+                <div className="bg-[#CCFF00] rounded-2xl p-4 sm:p-6 mt-6 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-zinc-950">sell</span>
                     <span className="text-sm font-black uppercase tracking-widest text-zinc-950">Promo Code</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       value={promoCode}
                       onChange={e => { setPromoCode(e.target.value); setPromoError(""); }}
@@ -256,7 +256,7 @@ export default function CheckoutPage() {
                       placeholder="e.g. FUNFIND10"
                     />
                     <button type="button" onClick={handleApplyPromo}
-                      className="bg-zinc-950 text-white px-5 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-black transition-colors">
+                      className="bg-zinc-950 text-white px-5 py-3 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-black transition-colors w-full sm:w-auto">
                       Apply
                     </button>
                   </div>
@@ -353,7 +353,7 @@ export default function CheckoutPage() {
                     onClick={handleRazorpayCheckout}
                     type="button"
                     disabled={isProcessing || !sdkReady}
-                    className="w-full bg-zinc-950 text-[#CCFF00] py-5 rounded-xl font-black text-lg uppercase tracking-widest hover:bg-black hover:text-white transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                    className="w-full bg-zinc-950 text-[#CCFF00] py-5 rounded-xl font-black text-sm sm:text-lg uppercase tracking-widest hover:bg-black hover:text-white transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                   >
                     {isProcessing ? "Processing..." : sdkReady ? "Pay with Razorpay" : "Loading Checkout..."}
                     <span className="material-symbols-outlined">{isProcessing ? "sync" : "lock"}</span>
@@ -370,9 +370,9 @@ export default function CheckoutPage() {
 
       {/* Footer */}
       <footer className="bg-zinc-50 mt-16 py-10 border-t border-zinc-200">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <span className="text-xl font-black tracking-tighter uppercase text-zinc-950">Fun Find</span>
-          <div className="flex gap-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+          <span className="text-lg sm:text-xl font-black tracking-tighter uppercase text-zinc-950">Fun Find</span>
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-8">
             <Link href="/legal/returns" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">Returns</Link>
             <Link href="/contact" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">Contact</Link>
             <Link href="/legal/privacy" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">Privacy</Link>
@@ -383,7 +383,7 @@ export default function CheckoutPage() {
       </footer>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 bg-white border-t border-zinc-100 shadow-lg rounded-t-2xl z-50 text-[10px] font-bold uppercase tracking-widest text-zinc-950">
+      <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-3 py-3 bg-white border-t border-zinc-100 shadow-lg rounded-t-2xl z-50 text-[9px] font-bold uppercase tracking-widest text-zinc-950">
         {[["storefront", "Shop", "/collection"], ["search", "Search", "/collection"], ["shopping_cart", "Cart", "/checkout"], ["person", "Account", "/auth"]].map(([icon, label, href]) => (
           <Link key={label} href={href} className={`flex flex-col items-center gap-0.5 ${href === "/checkout" ? "text-zinc-950 scale-110" : "text-zinc-400 hover:text-zinc-900"} transition-all active:scale-90`}>
             <span className="material-symbols-outlined text-xl">{icon}</span>
