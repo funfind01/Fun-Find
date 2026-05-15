@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Logo from "@/components/Logo";
+import Navbar from "@/components/Navbar";
 
 function ProfileDetailsForm({
   profile,
@@ -71,7 +70,6 @@ function ProfileDetailsForm({
 
 export default function ProfilePage() {
   const { user, loading: authLoading, showToast } = useAuth();
-  const router = useRouter();
   type OrderRow = {
     id: string;
     created_at: string;
@@ -88,9 +86,9 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/auth");
+      window.location.replace("/auth");
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading]);
 
   useEffect(() => {
     if (user) {
@@ -119,7 +117,7 @@ export default function ProfilePage() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    router.push("/");
+    window.location.replace("/");
   };
 
   const handleProfileChange = (field: "name" | "mobile", value: string) => {
@@ -156,22 +154,9 @@ export default function ProfilePage() {
 
   return (
     <main className="min-h-screen bg-[#f9f9fa] text-zinc-950 pb-20">
-      {/* Top Nav */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200">
-        <div className="flex justify-between items-center h-20 px-6 max-w-5xl mx-auto">
-          <Link href="/"><Logo className="text-[24px]" /></Link>
-          <div className="flex items-center gap-6">
-            <Link href="/collection" className="text-sm font-bold tracking-tight text-zinc-500 hover:text-zinc-900 transition-colors hidden sm:block">Shop</Link>
-            <Link href="/checkout" className="relative flex items-center gap-1.5 text-sm font-bold tracking-tight text-zinc-500 hover:text-zinc-900 transition-colors hidden sm:block">
-              <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
-              Cart
-            </Link>
-            <button onClick={handleSignOut} className="text-sm font-bold tracking-tight text-red-500 hover:text-red-600 transition-colors">Sign Out</button>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
-      <div className="max-w-5xl mx-auto px-6 pt-32">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-36 sm:pt-40">
         <div className="mb-14">
           <p className="text-sm uppercase tracking-[0.35em] text-zinc-500">My Profile</p>
           <h1 className="mt-4 text-5xl font-black tracking-[-0.05em] text-zinc-950">My Profile</h1>
@@ -190,6 +175,16 @@ export default function ProfilePage() {
             onSave={handleSaveProfile}
             saving={savingProfile}
           />
+
+          <div className="bg-white rounded-[32px] p-6 shadow-[0_18px_60px_rgba(0,0,0,0.08)] border border-zinc-200">
+            <p className="text-xs uppercase tracking-[0.32em] text-zinc-400 mb-3">Session</p>
+            <button
+              onClick={handleSignOut}
+              className="w-full rounded-2xl bg-zinc-950 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-white transition-colors hover:bg-zinc-800"
+            >
+              Sign Out
+            </button>
+          </div>
 
           {/* Shipping address section removed as requested */}
         </div>

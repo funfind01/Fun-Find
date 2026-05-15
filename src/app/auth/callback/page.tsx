@@ -1,12 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function AuthCallbackPage() {
-  const router = useRouter();
-
   useEffect(() => {
     // Supabase will automatically handle the session from the URL
     // Just wait a moment for it to process, then redirect
@@ -20,19 +17,19 @@ export default function AuthCallbackPage() {
         
         if (session?.user) {
           // User is authenticated, redirect to profile
-          router.push("/profile");
+          window.location.replace("/profile");
         } else {
           // No session, redirect to auth page
-          router.push("/auth");
+          window.location.replace("/auth");
         }
       } catch (error) {
         console.error("Auth callback error:", error);
-        router.push("/auth");
+        window.location.replace("/auth");
       }
     };
 
     handleCallback();
-  }, [router]);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">

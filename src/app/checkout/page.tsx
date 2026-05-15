@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import Script from "next/script";
 import { useAuth } from "@/context/AuthContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const GST_RATE = 0.18; // 18% GST
 
@@ -17,6 +17,9 @@ export default function CheckoutPage() {
   const [promoError, setPromoError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [sdkReady, setSdkReady] = useState(false);
+  const [sdkError, setSdkError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{ phone?: string; pincode?: string }>({});
+  const razorpayLoaderRef = useRef<Promise<boolean> | null>(null);
 
   // Shipping Address State
   const [address, setAddress] = useState({
@@ -33,6 +36,21 @@ export default function CheckoutPage() {
   const discount = promoApplied ? totalPrice * 0.1 : 0;
   const total = totalPrice + gst - discount;
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && (window as any).Razorpay) {
+      setSdkReady(true);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      if (!(window as any).Razorpay) {
+        setSdkError("Payment gateway is taking longer than usual to load.");
+      }
+    }, 8000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
   // SDK readiness will be set when the script loads
 
   const handleApplyPromo = () => {
@@ -45,10 +63,101 @@ export default function CheckoutPage() {
     }
   };
 
+  const validateShippingDetails = () => {
+    const nextErrors: { phone?: string; pincode?: string } = {};
+    const phone = address.phone.trim();
+    const pincode = address.pincode.trim();
+
+    if (!/^\d{10}$/.test(phone)) {
+      nextErrors.phone = "Enter a valid 10-digit mobile number.";
+    }
+
+    if (!/^\d{6}$/.test(pincode)) {
+      nextErrors.pincode = "Enter a valid 6-digit pincode.";
+    }
+
+    setFieldErrors(nextErrors);
+
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const ensureRazorpayReady = async () => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    if (typeof (window as any).Razorpay === "function") {
+      setSdkReady(true);
+      setSdkError("");
+      return true;
+    }
+
+    if (!razorpayLoaderRef.current) {
+      razorpayLoaderRef.current = new Promise<boolean>((resolve) => {
+        const existingScript = document.querySelector<HTMLScriptElement>('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+
+        const finish = (ok: boolean) => {
+          setSdkReady(ok);
+          setSdkError(ok ? "" : "Payment gateway failed to load. Please refresh and try again.");
+          resolve(ok);
+        };
+
+        const checkReady = () => {
+          if (typeof (window as any).Razorpay === "function") {
+            finish(true);
+          }
+        };
+
+        if (existingScript) {
+          existingScript.addEventListener("load", checkReady, { once: true });
+          existingScript.addEventListener("error", () => finish(false), { once: true });
+          window.setTimeout(() => {
+            if (typeof (window as any).Razorpay === "function") {
+              finish(true);
+            } else {
+              finish(false);
+            }
+          }, 2000);
+          return;
+        }
+
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
+        script.onload = () => checkReady();
+        script.onerror = () => finish(false);
+        document.body.appendChild(script);
+
+        window.setTimeout(() => {
+          if (typeof (window as any).Razorpay === "function") {
+            finish(true);
+          } else {
+            finish(false);
+          }
+        }, 2500);
+      });
+    }
+
+    return razorpayLoaderRef.current;
+  };
+
   const handleRazorpayCheckout = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!address.addressLine1 || !address.city || !address.pincode || !address.phone) {
       showToast("Please fill in all required shipping details.");
+      return;
+    }
+
+    if (!validateShippingDetails()) {
+      showToast("Please correct the mobile number and pincode.");
+      return;
+    }
+
+    const sdkIsReady = await ensureRazorpayReady();
+    const RazorpayCtor = typeof window !== "undefined" ? (window as any).Razorpay : null;
+    if (!sdkIsReady || typeof RazorpayCtor !== "function") {
+      setSdkReady(false);
+      showToast("Payment gateway is not ready yet.");
       return;
     }
 
@@ -122,8 +231,7 @@ export default function CheckoutPage() {
         }
       };
 
-      // @ts-ignore
-      const rzp1 = new window.Razorpay(options);
+      const rzp1 = new RazorpayCtor(options);
       rzp1.on('payment.failed', function (response: any){
         showToast(`Payment Failed: ${response.error.description}`);
       });
@@ -139,7 +247,15 @@ export default function CheckoutPage() {
 
   return (
     <main className="min-h-screen bg-[#f9f9fa] text-[#1a1c1d] overflow-x-hidden" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" onLoad={() => setSdkReady(true)} />
+      <Script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        strategy="afterInteractive"
+        onLoad={() => {
+          setSdkReady(true);
+          setSdkError("");
+        }}
+        onError={() => setSdkError("Payment gateway failed to load. Please refresh and try again.")}
+      />
       
       {/* Nav */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200">
@@ -284,19 +400,31 @@ export default function CheckoutPage() {
                       <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">Phone Number</label>
                       <input 
                         value={address.phone}
-                        onChange={e => setAddress({...address, phone: e.target.value})}
+                        onChange={e => {
+                          setAddress({...address, phone: e.target.value});
+                          setFieldErrors(prev => ({ ...prev, phone: undefined }));
+                        }}
                         className="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-zinc-950 outline-none transition-all"
                         placeholder="+91 99999 99999"
+                        inputMode="numeric"
+                        autoComplete="tel"
                       />
+                      {fieldErrors.phone && <p className="mt-1 text-xs font-medium text-red-600">{fieldErrors.phone}</p>}
                     </div>
                     <div>
                       <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">Pincode</label>
                       <input 
                         value={address.pincode}
-                        onChange={e => setAddress({...address, pincode: e.target.value})}
+                        onChange={e => {
+                          setAddress({...address, pincode: e.target.value});
+                          setFieldErrors(prev => ({ ...prev, pincode: undefined }));
+                        }}
                         className="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-zinc-950 outline-none transition-all"
                         placeholder="110001"
+                        inputMode="numeric"
+                        autoComplete="postal-code"
                       />
+                      {fieldErrors.pincode && <p className="mt-1 text-xs font-medium text-red-600">{fieldErrors.pincode}</p>}
                     </div>
                     <div className="md:col-span-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">Address Line 1</label>
@@ -358,6 +486,23 @@ export default function CheckoutPage() {
                     {isProcessing ? "Processing..." : sdkReady ? "Pay with Razorpay" : "Loading Checkout..."}
                     <span className="material-symbols-outlined">{isProcessing ? "sync" : "lock"}</span>
                   </button>
+                  {sdkError ? (
+                    <div className="mt-4 text-center space-y-2">
+                      <p className="text-xs text-red-500">{sdkError}</p>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setSdkError("");
+                          await ensureRazorpayReady();
+                        }}
+                        className="text-[11px] font-black uppercase tracking-widest text-zinc-950 underline"
+                      >
+                        Retry loading gateway
+                      </button>
+                    </div>
+                  ) : !sdkReady ? (
+                    <p className="text-center text-xs text-zinc-500 mt-4">Loading Razorpay payment gateway...</p>
+                  ) : null}
                   <p className="text-center text-xs text-zinc-400 mt-4">
                     Secure payments powered by Razorpay.
                   </p>
