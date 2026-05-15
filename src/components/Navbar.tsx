@@ -11,8 +11,8 @@ const Navbar = () => {
 
   return (
     <div className="fixed top-0 w-full z-50">
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-[#29fe57] via-[#24e54e] to-[#29fe57] overflow-hidden whitespace-nowrap py-1 flex items-center border-b border-black/5">
+      {/* Top Banner (hidden on small screens to save vertical space) */}
+      <div className="hidden sm:flex bg-gradient-to-r from-[#29fe57] via-[#24e54e] to-[#29fe57] overflow-hidden whitespace-nowrap py-1 flex items-center border-b border-black/5">
         <div className="animate-marquee flex items-center shrink-0 w-max">
           {[...Array(10)].map((_, i) => (
             <span key={i} className="text-[#00711f] text-[9px] sm:text-[10px] font-bold tracking-widest uppercase px-3 sm:px-4 flex items-center shrink-0">
@@ -24,7 +24,7 @@ const Navbar = () => {
 
       {/* Main Navbar */}
       <nav className="bg-black text-white">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-4 sm:py-0 sm:h-[72px] flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-2 sm:py-0 sm:h-[72px] flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
           <div className="flex items-center justify-between gap-4 sm:contents">
             {/* Left: Logo */}
             <Link href="/" className="transition-all duration-300 hover:-translate-y-1 inline-block shrink-0">

@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Logo from "@/components/Logo";
 import ProductRating from "@/components/ProductRating";
 import SortDropdown from "@/components/SortDropdown";
+import MobileFilters from "@/components/MobileFilters";
 
 export default async function CollectionPage({ searchParams }: { searchParams: Promise<{ category?: string, q?: string, sort?: string, instock?: string }> }) {
   const params = await searchParams;
@@ -20,6 +21,8 @@ export default async function CollectionPage({ searchParams }: { searchParams: P
   if (currentCategory !== "All") {
     products = products.filter(p => p.category.toLowerCase() === currentCategory.toLowerCase());
   }
+
+  const categories = Array.from(new Set(allProducts.map((p: any) => p.category || "Other"))).sort();
   
   if (currentSearch) {
     products = products.filter(p => 
@@ -44,7 +47,7 @@ export default async function CollectionPage({ searchParams }: { searchParams: P
     <div className="bg-[#f9f9fa] text-[#1a1c1d] min-h-screen overflow-x-hidden">
       <Navbar />
 
-      <div className="max-w-[1440px] mx-auto mt-20 sm:mt-20">
+      <div className="max-w-[1440px] mx-auto pt-24 sm:pt-20">
 
         <main className="flex-1 p-4 sm:p-6 lg:p-12 min-h-screen">
           <header className="mb-8 sm:mb-12">
@@ -61,10 +64,15 @@ export default async function CollectionPage({ searchParams }: { searchParams: P
                   Showing {products.length} {currentSearch ? `results for "${currentSearch}"` : 'objects'}
                 </p>
               </div>
-              <div>
+              <div className="flex items-center gap-3">
                 <SortDropdown currentSort={currentSort} currentCategory={currentCategory} currentSearch={currentSearch} />
               </div>
             </div>
+
+          {/* Mobile action row: Filters + Sort */}
+          <div className="mt-6 mb-6 flex items-center justify-between gap-4 px-1">
+            <MobileFilters categories={categories} currentCategory={currentCategory} inStockOnly={inStockOnly} />
+          </div>
           </header>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12">
