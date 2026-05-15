@@ -64,12 +64,17 @@ export default function CheckoutPage() {
   };
 
   const validateShippingDetails = () => {
+    const normalizePhone = (raw: string) => {
+      return raw.trim().replace(/\s|-/g, "").replace(/^(?:\+91|91|0)/, "");
+    };
+
     const nextErrors: { phone?: string; pincode?: string } = {};
-    const phone = address.phone.trim();
+    const phoneRaw = address.phone || "";
+    const phone = normalizePhone(phoneRaw);
     const pincode = address.pincode.trim();
 
     if (!/^\d{10}$/.test(phone)) {
-      nextErrors.phone = "Enter a valid 10-digit mobile number.";
+      nextErrors.phone = "Enter a valid 10-digit mobile number (you may include +91).";
     }
 
     if (!/^\d{6}$/.test(pincode)) {
@@ -143,6 +148,12 @@ export default function CheckoutPage() {
 
   const handleRazorpayCheckout = async (e: React.MouseEvent) => {
     e.preventDefault();
+    if (!user) {
+      showToast("Please sign in to continue to payment.");
+      window.location.href = "/auth";
+      return;
+    }
+
     if (!address.addressLine1 || !address.city || !address.pincode || !address.phone) {
       showToast("Please fill in all required shipping details.");
       return;
@@ -178,6 +189,10 @@ export default function CheckoutPage() {
         setIsProcessing(false);
         return;
       }
+
+      const normalizePhone = (raw: string) => raw.trim().replace(/\s|-/g, "").replace(/^(?:\+91|91|0)/, "");
+
+      const normalizedPhone = normalizePhone(address.phone || "");
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -224,7 +239,7 @@ export default function CheckoutPage() {
         prefill: {
           name: address.name || user?.user_metadata?.name || "Customer",
           email: user?.email || "",
-          contact: address.phone
+          contact: normalizedPhone
         },
         theme: {
           color: "#09090b"
@@ -480,10 +495,10 @@ export default function CheckoutPage() {
                   <button
                     onClick={handleRazorpayCheckout}
                     type="button"
-                    disabled={isProcessing || !sdkReady}
+                    disabled={isProcessing}
                     className="w-full bg-zinc-950 text-[#CCFF00] py-5 rounded-xl font-black text-sm sm:text-lg uppercase tracking-widest hover:bg-black hover:text-white transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                   >
-                    {isProcessing ? "Processing..." : sdkReady ? "Pay with Razorpay" : "Loading Checkout..."}
+                    {!user ? "Sign in to pay" : isProcessing ? "Processing..." : sdkReady ? "Pay with Razorpay" : "Loading Checkout..."}
                     <span className="material-symbols-outlined">{isProcessing ? "sync" : "lock"}</span>
                   </button>
                   {sdkError ? (
