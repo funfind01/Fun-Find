@@ -14,14 +14,6 @@ export default async function CollectionPage({ searchParams }: { searchParams: P
   const inStockOnly = params.instock === "true";
 
   const allProducts = await getProducts();
-  
-  const availableCategories = Array.from(new Set(allProducts.map(p => p.category)));
-  const navCategories = ["All", ...availableCategories];
-  if (!navCategories.includes("Drops")) navCategories.push("Drops");
-
-  const availableMaterials = Array.from(
-    new Set(allProducts.map(p => p.metadata?.material).filter(Boolean))
-  ) as string[];
 
   let products = [...allProducts];
   
@@ -52,60 +44,7 @@ export default async function CollectionPage({ searchParams }: { searchParams: P
     <div className="bg-[#f9f9fa] text-[#1a1c1d] min-h-screen overflow-x-hidden">
       <Navbar />
 
-      <div className="max-w-[1440px] mx-auto mt-20 sm:mt-20 flex">
-        <aside className="hidden lg:flex h-auto w-64 flex-col gap-4 p-8 bg-white">
-          <div className="mb-6">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-900">FILTERS</h2>
-            <p className="text-[10px] text-zinc-400 uppercase tracking-widest mt-1">Refine Selection</p>
-          </div>
-
-          <nav className="flex flex-col gap-2">
-            <Link 
-              href={`/collection?category=${currentCategory}${currentSearch ? `&q=${currentSearch}` : ''}`}
-              className={`flex items-center gap-3 rounded-lg p-3 text-sm font-bold uppercase tracking-wider transition-all ${!currentSort || currentSort === 'featured' && !inStockOnly ? 'bg-zinc-900 text-white' : 'text-zinc-400 hover:bg-zinc-100'}`}
-            >
-              <span className="material-symbols-outlined text-lg">grid_view</span>
-              All Products
-            </Link>
-            <Link 
-              href={`/collection?category=${currentCategory}${currentSearch ? `&q=${currentSearch}` : ''}&sort=newest`}
-              className={`flex items-center gap-3 rounded-lg p-3 text-sm font-bold uppercase tracking-wider transition-all ${currentSort === 'newest' ? 'bg-zinc-900 text-white' : 'text-zinc-400 hover:bg-zinc-100'}`}
-            >
-              <span className="material-symbols-outlined text-lg">auto_awesome</span>
-              New Arrivals
-            </Link>
-            <Link 
-              href={`/collection?category=${currentCategory}${currentSearch ? `&q=${currentSearch}` : ''}&sort=price_asc`}
-              className={`flex items-center gap-3 rounded-lg p-3 text-sm font-bold uppercase tracking-wider transition-all ${currentSort === 'price_asc' ? 'bg-zinc-900 text-white' : 'text-zinc-400 hover:bg-zinc-100'}`}
-            >
-              <span className="material-symbols-outlined text-lg">payments</span>
-              Price Range
-            </Link>
-            <Link 
-              href={`/collection?category=${currentCategory}${currentSearch ? `&q=${currentSearch}` : ''}&instock=${inStockOnly ? 'false' : 'true'}`}
-              className={`flex items-center gap-3 rounded-lg p-3 text-sm font-bold uppercase tracking-wider transition-all ${inStockOnly ? 'bg-zinc-900 text-white' : 'text-zinc-400 hover:bg-zinc-100'}`}
-            >
-              <span className="material-symbols-outlined text-lg">event_available</span>
-              In Stock Only
-            </Link>
-          </nav>
-
-          <div className="mt-8 border-t border-zinc-100 pt-8">
-            <p className="text-[10px] font-bold text-zinc-900 mb-4 tracking-widest uppercase">Materials</p>
-            <div className="space-y-3">
-              {availableMaterials.length > 0 ? availableMaterials.map((m) => (
-                <Link key={m} href={`/collection?category=${currentCategory}&q=${m}`} className="flex items-center gap-3 cursor-pointer group">
-                  <div className={`w-4 h-4 rounded border ${currentSearch === m ? 'bg-black border-black' : 'border-zinc-300'} flex items-center justify-center transition-colors`}>
-                    {currentSearch === m && <span className="material-symbols-outlined text-white text-[10px]">check</span>}
-                  </div>
-                  <span className={`text-xs font-medium transition-colors ${currentSearch === m ? 'text-black' : 'text-zinc-600 group-hover:text-black'}`}>{m}</span>
-                </Link>
-              )) : (
-                <p className="text-xs text-zinc-400">No specific materials found.</p>
-              )}
-            </div>
-          </div>
-        </aside>
+      <div className="max-w-[1440px] mx-auto mt-20 sm:mt-20">
 
         <main className="flex-1 p-4 sm:p-6 lg:p-12 min-h-screen">
           <header className="mb-8 sm:mb-12">
@@ -117,61 +56,14 @@ export default async function CollectionPage({ searchParams }: { searchParams: P
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6">
               <div>
+                <h1 className="text-[32px] sm:text-[48px] leading-[1.05] tracking-[-0.04em] font-extrabold text-black mb-2">{currentCategory === "All" ? "All Products" : currentCategory}</h1>
+                <p className="text-[11px] sm:text-[12px] text-zinc-500 tracking-widest uppercase">
+                  Showing {products.length} {currentSearch ? `results for "${currentSearch}"` : 'objects'}
+                </p>
+              </div>
+              <div>
                 <SortDropdown currentSort={currentSort} currentCategory={currentCategory} currentSearch={currentSearch} />
               </div>
-                href={`/collection?category=${currentCategory}${currentSearch ? `&q=${currentSearch}` : ''}&sort=${currentSort === 'price_desc' ? 'featured' : currentSort === 'price_asc' ? 'price_desc' : 'price_asc'}`}
-                className="flex items-center gap-3 sm:gap-4 border-b border-zinc-200 py-2 px-1 hover:border-black transition-colors text-xs sm:text-sm font-bold uppercase w-fit"
-              >
-                Sort By: {currentSort === 'newest' ? 'Newest' : currentSort === 'price_asc' ? 'Price (Low)' : currentSort === 'price_desc' ? 'Price (High)' : 'Featured'}
-                <span className="material-symbols-outlined text-lg">expand_more</span>
-              </Link>
-            </div>
-
-            <div className="lg:hidden mt-6 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mb-3">Filters</p>
-              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                <Link
-                  href={`/collection?category=All${currentSearch ? `&q=${currentSearch}` : ''}`}
-                  className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-colors ${currentCategory === 'All' ? 'border-black bg-black text-white' : 'border-zinc-200 bg-zinc-50 text-zinc-600'}`}
-                >
-                  All
-                </Link>
-                <Link
-                  href={`/collection?category=${currentCategory}${currentSearch ? `&q=${currentSearch}` : ''}&sort=newest`}
-                  className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-colors ${currentSort === 'newest' ? 'border-black bg-black text-white' : 'border-zinc-200 bg-zinc-50 text-zinc-600'}`}
-                >
-                  Newest
-                </Link>
-                <Link
-                  href={`/collection?category=${currentCategory}${currentSearch ? `&q=${currentSearch}` : ''}&sort=price_asc`}
-                  className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-colors ${currentSort === 'price_asc' ? 'border-black bg-black text-white' : 'border-zinc-200 bg-zinc-50 text-zinc-600'}`}
-                >
-                  Price Low
-                </Link>
-                <Link
-                  href={`/collection?category=${currentCategory}${currentSearch ? `&q=${currentSearch}` : ''}&instock=${inStockOnly ? 'false' : 'true'}`}
-                  className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-colors ${inStockOnly ? 'border-black bg-black text-white' : 'border-zinc-200 bg-zinc-50 text-zinc-600'}`}
-                >
-                  In Stock
-                </Link>
-              </div>
-
-              {availableMaterials.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-zinc-100">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mb-3">Materials</p>
-                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                    {availableMaterials.map((m) => (
-                      <Link
-                        key={m}
-                        href={`/collection?category=${currentCategory}&q=${m}`}
-                        className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-colors ${currentSearch === m ? 'border-black bg-black text-white' : 'border-zinc-200 bg-zinc-50 text-zinc-600'}`}
-                      >
-                        {m}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </header>
 

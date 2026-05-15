@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 
 export default function SortDropdown({ currentSort, currentCategory, currentSearch }: { currentSort: string; currentCategory: string; currentSearch: string; }) {
   const options = [
