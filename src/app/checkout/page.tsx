@@ -86,6 +86,14 @@ export default function CheckoutPage() {
     return Object.keys(nextErrors).length === 0;
   };
 
+  const formatPhoneForDisplay = (raw: string) => {
+    const digits = raw.replace(/\D/g, "");
+    if (!digits) return "";
+    // take last 10 digits as national number
+    const last10 = digits.slice(-10);
+    return `+91 ${last10}`;
+  };
+
   const ensureRazorpayReady = async () => {
     if (typeof window === "undefined") {
       return false;
@@ -415,10 +423,12 @@ export default function CheckoutPage() {
                       <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">Phone Number</label>
                       <input 
                         value={address.phone}
-                        onChange={e => {
-                          setAddress({...address, phone: e.target.value});
-                          setFieldErrors(prev => ({ ...prev, phone: undefined }));
-                        }}
+                            onChange={e => {
+                              const raw = e.target.value || "";
+                              const formatted = formatPhoneForDisplay(raw);
+                              setAddress({...address, phone: formatted});
+                              setFieldErrors(prev => ({ ...prev, phone: undefined }));
+                            }}
                         className="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-zinc-950 outline-none transition-all"
                         placeholder="+91 99999 99999"
                         inputMode="numeric"
