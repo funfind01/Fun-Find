@@ -22,20 +22,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
 
+  const isInvalidRefreshTokenError = (message: string) =>
+    /invalid refresh token|refresh token not found/i.test(message);
+
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
   };
 
   useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    let isMounted = true;
+
+    const bootstrapSession = async () => {
+      // Check active session
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (error && isInvalidRefreshTokenError(error.message)) {
+        await supabase.auth.signOut({ scope: "local" });
+        if (isMounted) {
+          setUser(null);
+          setLoading(false);
+          showToast("Session expired. Please sign in again.");
+        }
+        return;
+      }
+
+      if (isMounted) {
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    };
+
+    bootstrapSession();
 
     // Listen for auth changes (login, logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (_event === "TOKEN_REFRESH_FAILED") {
+        supabase.auth.signOut({ scope: "local" });
+        setUser(null);
+        setLoading(false);
+        showToast("Session expired. Please sign in again.");
+        return;
+      }
+
       setUser(session?.user ?? null);
       setLoading(false);
       
@@ -44,7 +73,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (

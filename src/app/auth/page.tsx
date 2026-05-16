@@ -5,17 +5,26 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import Logo from "@/components/Logo";
+import { useSearchParams } from "next/navigation";
+
+const getSafeReturnTo = (value: string | null) => {
+  if (!value) return "/profile";
+  if (!value.startsWith("/") || value.startsWith("//")) return "/profile";
+  return value;
+};
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const returnTo = getSafeReturnTo(searchParams.get("returnTo"));
 
   useEffect(() => {
     if (user) {
-      window.location.replace("/profile");
+      window.location.replace(returnTo);
     }
-  }, [user]);
+  }, [returnTo, user]);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
@@ -24,7 +33,7 @@ export default function AuthPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo)}`,
       },
     });
 

@@ -5,12 +5,20 @@ import { useCart } from "@/context/CartContext";
 import Script from "next/script";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 
 const GST_RATE = 0.18; // 18% GST
+
+const getSafeReturnTo = (value: string) => {
+  if (!value.startsWith("/") || value.startsWith("//")) return "/checkout";
+  return value;
+};
 
 export default function CheckoutPage() {
   const { cart, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
   const { user, showToast } = useAuth();
+  const pathname = usePathname();
+  const authReturnTo = getSafeReturnTo(pathname || "/checkout");
   
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
@@ -86,13 +94,7 @@ export default function CheckoutPage() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const formatPhoneForDisplay = (raw: string) => {
-    const digits = raw.replace(/\D/g, "");
-    if (!digits) return "";
-    // take last 10 digits as national number
-    const last10 = digits.slice(-10);
-    return `+91 ${last10}`;
-  };
+  const normalizePhoneInput = (raw: string) => raw.replace(/\D/g, "").slice(-10);
 
   const ensureRazorpayReady = async () => {
     if (typeof window === "undefined") {
@@ -158,7 +160,7 @@ export default function CheckoutPage() {
     e.preventDefault();
     if (!user) {
       showToast("Please sign in to continue to payment.");
-      window.location.href = "/auth";
+      window.location.href = `/auth?returnTo=${encodeURIComponent(authReturnTo)}`;
       return;
     }
 
@@ -198,9 +200,7 @@ export default function CheckoutPage() {
         return;
       }
 
-      const normalizePhone = (raw: string) => raw.trim().replace(/\s|-/g, "").replace(/^(?:\+91|91|0)/, "");
-
-      const normalizedPhone = normalizePhone(address.phone || "");
+      const normalizedPhone = normalizePhoneInput(address.phone || "");
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -297,7 +297,7 @@ export default function CheckoutPage() {
                 <span className="material-symbols-outlined">account_circle</span>
               </Link>
             ) : (
-              <Link href="/auth" className="material-symbols-outlined hover:text-zinc-500 transition-colors">person</Link>
+              <Link href={`/auth?returnTo=${encodeURIComponent(authReturnTo)}`} className="material-symbols-outlined hover:text-zinc-500 transition-colors">person</Link>
             )}
           </div>
         </div>
@@ -421,19 +421,22 @@ export default function CheckoutPage() {
                     </div>
                     <div>
                       <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">Phone Number</label>
-                      <input 
-                        value={address.phone}
-                            onChange={e => {
-                              const raw = e.target.value || "";
-                              const formatted = formatPhoneForDisplay(raw);
-                              setAddress({...address, phone: formatted});
-                              setFieldErrors(prev => ({ ...prev, phone: undefined }));
-                            }}
-                        className="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-zinc-950 outline-none transition-all"
-                        placeholder="+91 99999 99999"
-                        inputMode="numeric"
-                        autoComplete="tel"
-                      />
+                      <div className="relative">
+                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-semibold text-zinc-400">+91</span>
+                        <input 
+                          value={address.phone}
+                          onChange={e => {
+                            const digitsOnly = normalizePhoneInput(e.target.value || "");
+                            setAddress({...address, phone: digitsOnly});
+                            setFieldErrors(prev => ({ ...prev, phone: undefined }));
+                          }}
+                          className="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-3 pl-14 text-sm focus:ring-2 focus:ring-zinc-950 outline-none transition-all"
+                          placeholder="9999999999"
+                          inputMode="numeric"
+                          autoComplete="tel"
+                          maxLength={10}
+                        />
+                      </div>
                       {fieldErrors.phone && <p className="mt-1 text-xs font-medium text-red-600">{fieldErrors.phone}</p>}
                     </div>
                     <div>

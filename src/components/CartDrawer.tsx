@@ -4,9 +4,13 @@ import { useCart } from "@/context/CartContext";
 import Link from "next/link";
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CartDrawer() {
   const { cart, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, totalPrice } = useCart();
+  const { user } = useAuth();
+  const checkoutHref = user ? "/checkout" : "/auth?returnTo=/checkout";
+  const checkoutLabel = user ? "Checkout" : "Sign in to checkout";
 
   useEffect(() => {
     if (isCartOpen) {
@@ -118,11 +122,11 @@ export default function CartDrawer() {
               <span className="font-black text-zinc-950 text-xl">₹{totalPrice.toFixed(2)}</span>
             </div>
             <Link 
-              href="/checkout"
+              href={checkoutHref}
               onClick={() => setIsCartOpen(false)}
               className="w-full flex items-center justify-center gap-2 bg-zinc-950 text-white py-4 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-black transition-transform active:scale-95"
             >
-              Checkout <span className="material-symbols-outlined text-sm">arrow_forward</span>
+              {checkoutLabel} <span className="material-symbols-outlined text-sm">arrow_forward</span>
             </Link>
           </div>
         )}

@@ -2,8 +2,18 @@
 
 import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { useSearchParams } from "next/navigation";
+
+const getSafeReturnTo = (value: string | null) => {
+  if (!value) return "/profile";
+  if (!value.startsWith("/") || value.startsWith("//")) return "/profile";
+  return value;
+};
 
 export default function AuthCallbackPage() {
+  const searchParams = useSearchParams();
+  const returnTo = getSafeReturnTo(searchParams.get("returnTo"));
+
   useEffect(() => {
     // Supabase will automatically handle the session from the URL
     // Just wait a moment for it to process, then redirect
@@ -16,20 +26,20 @@ export default function AuthCallbackPage() {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // User is authenticated, redirect to profile
-          window.location.replace("/profile");
+          // User is authenticated, redirect to the original destination when available
+          window.location.replace(returnTo);
         } else {
           // No session, redirect to auth page
-          window.location.replace("/auth");
+          window.location.replace(`/auth?returnTo=${encodeURIComponent(returnTo)}`);
         }
       } catch (error) {
         console.error("Auth callback error:", error);
-        window.location.replace("/auth");
+        window.location.replace(`/auth?returnTo=${encodeURIComponent(returnTo)}`);
       }
     };
 
     handleCallback();
-  }, []);
+  }, [returnTo]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
